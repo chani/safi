@@ -62,20 +62,13 @@ assert($rawCache instanceof CacheInterface);
 
 $componentManager = new ComponentManager($assembler, $rawCache, $logger);
 
-$providers = [
-    WajhaServiceProvider::class,
-    AuthServiceProvider::class,
-];
-
-$componentManager->bootProviders($providers);
-
-$dbProvider = new RedBeanServiceProvider($dsn, $dbMode);
-$dbProvider->register($assembler);
-$dbProvider->boot($assembler);
-
-$twigProvider = new TwigServiceProvider($templateDir, $cacheDir, $debug);
-$twigProvider->register($assembler);
-$twigProvider->boot($assembler);
+// Instantiated Service Providers passed directly to Composition Root
+$componentManager->bootProviders([
+    new RedBeanServiceProvider($dsn, $dbMode),
+    new WajhaServiceProvider(),
+    new AuthServiceProvider(),
+    new TwigServiceProvider($templateDir, $cacheDir, $debug),
+]);
 
 /** @var SecurityService $security */
 $security = $assembler->get(SecurityService::class);
