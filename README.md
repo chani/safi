@@ -25,7 +25,7 @@ Security is integrated into the core execution pipeline rather than left to manu
 * Session Hijacking Protection: Active sessions are bound to a SHA-256 hash of the client's User-Agent string and invalidated on mismatch.
 * Template Sandbox Isolation: Twig execution is constrained by a security policy restricting untrusted template tags, raw PHP calls, and un-whitelisted method execution (SSTI defense).
 * Automated CSRF Defense: Cross-Site Request Forgery tokens are generated and validated automatically at the pipeline level for state-mutating HTTP requests.
-* Zero-Memory Binary Piping: Raw request input streams are piped directly to target resources via native stream descriptors, preventing memory exhaustion attacks on large file uploads.
+* Constant-Memory Binary Stream Piping: Raw request input streams are piped directly to target resources via native stream descriptors, preventing memory exhaustion attacks on large file uploads.
 
 ---
 

@@ -1,4 +1,4 @@
-# µADR-008: Stateful Internal Redirect Loop Shield
+# µADR-008: Redirect Loop Protection
 -----
 tags: security middleware redirects
 status: accepted

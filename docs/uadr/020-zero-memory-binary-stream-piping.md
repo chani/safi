@@ -1,4 +1,4 @@
-# µADR-020: Zero-Memory Binary Stream Piping
+# µADR-020: Constant-Memory Binary Stream Piping
 -----
 tags: request http streaming memory
 status: accepted
