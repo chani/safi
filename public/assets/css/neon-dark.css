@@ -1,0 +1,61 @@
+/**
+ * Neon Dark Theme - Compact Overrides for Pico.css v2
+ * Author: Jean Bruenn
+ */
+:root {
+  /* Compact sizing */
+  --pico-font-size: 87.5%;
+  --pico-line-height: 1.4;
+  --pico-form-element-spacing-vertical: 0.35rem;
+  --pico-form-element-spacing-horizontal: 0.65rem;
+  --pico-block-spacing-vertical: 0.75rem;
+  --pico-block-spacing-horizontal: 0.75rem;
+  --pico-border-radius: 0.25rem;
+
+  /* Dark color palette */
+  --pico-background-color: #1e1f22;
+  --pico-card-background-color: #2b2d30;
+  --pico-card-sectionning-background-color: #26282b;
+  --pico-color: #bcbec4;
+  --pico-muted-color: #7a7e85;
+  --pico-muted-border-color: #393b40;
+  --pico-border-color: #43454a;
+
+  /* Neon accents */
+  --pico-primary: #66fcf1;
+  --pico-primary-background: #1f4e4b;
+  --pico-primary-hover: #45a29e;
+  --pico-primary-hover-background: #2b6c68;
+  --pico-primary-underline: #66fcf1;
+  
+  --pico-ins-color: #6a8759;
+  --pico-del-color: #ff6b7b;
+}
+
+body {
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace, sans-serif;
+  background-color: var(--pico-background-color);
+  color: var(--pico-color);
+}
+
+article {
+  border: 1px solid var(--pico-muted-border-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+header h2, header h3 {
+  color: #66fcf1;
+  letter-spacing: 0.5px;
+}
+
+table th {
+  color: #cc7832;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+mark {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+}

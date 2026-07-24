@@ -1,0 +1,37 @@
+{% extends "_page.twig" %}
+
+{% block title %}Sign In - Safi Portal{% endblock %}
+
+{% block content %}
+<div style="max-width: 460px; margin: 3rem auto;">
+    <article>
+        <header style="text-align: center;">
+            <h3><i class="fa-solid fa-lock"></i> Authentication Portal</h3>
+            <p><small>Safi Microframework Demo Node</small></p>
+        </header>
+
+        {% if error is defined and error %}
+            <p><mark style="background: var(--pico-del-color);">{{ error }}</mark></p>
+        {% endif %}
+
+        <div style="padding: 0.75rem 1rem; margin-bottom: 1.5rem; background: var(--pico-card-sectionning-background-color); border-radius: var(--pico-border-radius); border: 1px solid var(--pico-muted-border-color);">
+            <small><strong><i class="fa-solid fa-circle-info"></i> Demo Credentials:</strong></small><br>
+            <small>User: <code>admin</code> &bull; Password: <code>admin</code></small>
+        </div>
+
+        <form action="/login" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <label for="username">Username / Email</label>
+            <input type="text" id="username" name="username" value="admin" required autofocus>
+
+            <label for="password">Security Key</label>
+            <input type="password" id="password" name="password" value="admin" required>
+
+            <button type="submit" class="contrast w-100" style="margin-top: 1rem;">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In (Demo)
+            </button>
+        </form>
+    </article>
+</div>
+{% endblock %}

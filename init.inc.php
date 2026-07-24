@@ -1,0 +1,119 @@
+<?php
+
+/**
+ * Safi Microframework
+ * @author Jean Bruenn
+ * @copyright 2026 All Rights Reserved
+ * @see https://github.com/chani/safi
+ */
+
+declare(strict_types=1);
+
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
+use Safi\Core\Assembler;
+use Safi\Core\ComponentManager;
+use Safi\Core\Contracts\RouterInterface;
+use Safi\Core\Contracts\ViewEngineInterface;
+use Safi\Core\Http\CorrelationIdMiddleware;
+use Safi\Core\Kernel;
+use Safi\Core\Logger;
+use Safi\Core\Services\CacheService;
+use Safi\Core\Services\SecurityService;
+use Safi\Extensions\Auth\AuthMiddleware;
+use Safi\Extensions\Auth\AuthServiceProvider;
+use Safi\Extensions\DbRedBean\RedBeanServiceProvider;
+use Safi\Extensions\RouterWajha\WajhaServiceProvider;
+use Safi\Extensions\ViewTwig\TwigServiceProvider;
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+/** @var array<string, mixed> $config */
+$config = require __DIR__ . '/config/config.php';
+if (file_exists(__DIR__ . '/config/config.local.php')) {
+    /** @var array<string, mixed> $localConfig */
+    $localConfig = require __DIR__ . '/config/config.local.php';
+    $config = array_replace_recursive($config, $localConfig);
+}
+
+/** @var array<string, mixed> $appConfig */
+$appConfig = is_array($config['app'] ?? null) ? $config['app'] : [];
+/** @var array<string, mixed> $dbConfig */
+$dbConfig = is_array($config['db'] ?? null) ? $config['db'] : [];
+/** @var array<string, mixed> $viewConfig */
+$viewConfig = is_array($config['views'] ?? null) ? $config['views'] : [];
+
+$debug = isset($appConfig['debug']) && $appConfig['debug'] === true;
+$dsn = is_string($dbConfig['dsn'] ?? null) ? $dbConfig['dsn'] : 'sqlite:' . __DIR__ . '/data/db/safi.db';
+$dbMode = is_string($dbConfig['mode'] ?? null) ? $dbConfig['mode'] : 'local';
+$templateDir = is_string($viewConfig['template_dir'] ?? null) ? $viewConfig['template_dir'] : __DIR__ . '/templates';
+$cacheDir = is_string($viewConfig['cache_dir'] ?? null) ? $viewConfig['cache_dir'] : __DIR__ . '/data/cache/views';
+
+$logger = new Logger($debug);
+$assembler = new Assembler($logger);
+
+$assembler->set(ContainerInterface::class, $assembler);
+$assembler->set(LoggerInterface::class, $logger);
+$assembler->set(CacheInterface::class, fn(ContainerInterface $_c): CacheInterface => new CacheService());
+
+$rawCache = $assembler->get(CacheInterface::class);
+assert($rawCache instanceof CacheInterface);
+
+$componentManager = new ComponentManager($assembler, $rawCache, $logger);
+
+$providers = [
+    WajhaServiceProvider::class,
+    AuthServiceProvider::class,
+];
+
+$componentManager->bootProviders($providers);
+
+$dbProvider = new RedBeanServiceProvider($dsn, $dbMode);
+$dbProvider->register($assembler);
+$dbProvider->boot($assembler);
+
+$twigProvider = new TwigServiceProvider($templateDir, $cacheDir, $debug);
+$twigProvider->register($assembler);
+$twigProvider->boot($assembler);
+
+/** @var SecurityService $security */
+$security = $assembler->get(SecurityService::class);
+$security->secureSessionStart();
+
+/** @var ViewEngineInterface $viewEngine */
+$viewEngine = $assembler->get(ViewEngineInterface::class);
+$viewEngine->registerNamespace('HelloWorld', __DIR__ . '/components/HelloWorld/Views');
+$viewEngine->addGlobal('csrf_token', fn(): string => $security->getCsrfToken());
+$viewEngine->addGlobal('session', fn(): array => $_SESSION ?? []);
+$viewEngine->addGlobal('app_version', Kernel::VERSION);
+
+/** @var RouterInterface $router */
+$router = $assembler->get(RouterInterface::class);
+
+$componentManager->registerAttributeRoutes($router, __DIR__ . '/components');
+
+$authSrcPath = is_dir(__DIR__ . '/vendor/chani/safi-auth/src')
+    ? __DIR__ . '/vendor/chani/safi-auth/src'
+    : __DIR__ . '/../safi-auth/src';
+
+if (is_dir($authSrcPath)) {
+    $componentManager->registerAttributeRoutes($router, $authSrcPath);
+}
+
+$assembler->set(Kernel::class, static fn(ContainerInterface $_c): Kernel => new Kernel(
+    $assembler,
+    $router,
+    $logger,
+    [
+        CorrelationIdMiddleware::class,
+        AuthMiddleware::class,
+    ],
+));
+
+return [
+    'assembler' => $assembler,
+    'kernel' => $assembler->get(Kernel::class),
+    'router' => $router,
+    'logger' => $logger,
+];

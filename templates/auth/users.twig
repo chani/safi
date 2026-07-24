@@ -1,0 +1,59 @@
+{% extends "_page.twig" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<article>
+    <header>
+        <h3><i class="fa-solid fa-users"></i> User Directory</h3>
+        <p><small>Manage system users and access roles</small></p>
+    </header>
+
+    <div class="grid">
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email / Username</th>
+                        <th>Role</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                        <tr>
+                            <td>{{ u.id }}</td>
+                            <td><strong>{{ u.email }}</strong></td>
+                            <td><mark>{{ u.role }}</mark></td>
+                            <td><small>{{ u.created_at }}</small></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4">No users registered in database.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div>
+            <article>
+                <header><strong>Create New User</strong></header>
+                <form action="/admin/users/save" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <label>
+                        Email / Username
+                        <input type="text" name="email" placeholder="user@domain.com" required>
+                    </label>
+                    <label>
+                        Password
+                        <input type="password" name="password" placeholder="••••••••" required>
+                    </label>
+                    <button type="submit" class="contrast w-100">Create User</button>
+                </form>
+            </article>
+        </div>
+    </div>
+</article>
+{% endblock %}

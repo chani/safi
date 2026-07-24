@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Safi Microframework - CLI Engine
+ * @author Jean Bruenn
+ * @copyright 2026 All Rights Reserved
+ */
+
+declare(strict_types=1);
+
+use Safi\Core\Cli\CommandKernel;
+use Safi\Core\Cli\DiDumpCommand;
+use Safi\Core\Cli\ReindexCommand;
+use Safi\Core\Cli\WorkerCommand;
+
+/** @var array{assembler: Psr\Container\ContainerInterface} $boot */
+$boot = require __DIR__ . '/../init.inc.php';
+
+$container = $boot['assembler'];
+$kernel = new CommandKernel($container);
+
+$kernel->registerCommandClass(DiDumpCommand::class);
+$kernel->registerCommandClass(WorkerCommand::class);
+$kernel->registerCommandClass(ReindexCommand::class);
+
+$exitCode = $kernel->run($argv);
+exit($exitCode);

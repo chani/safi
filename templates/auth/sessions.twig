@@ -1,0 +1,46 @@
+{% extends "_page.twig" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<article>
+    <header>
+        <h3><i class="fa-solid fa-shield-virus"></i> Active IP Blacklist &amp; Locks</h3>
+        <p><small>Monitored brute-force rate limits and blocked IP nodes</small></p>
+    </header>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>IP Address</th>
+                <th>Locked Until</th>
+                <th style="text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ip in lockedIps %}
+                <tr>
+                    <td>{{ ip.id }}</td>
+                    <td><code>{{ ip.ip }}</code></td>
+                    <td><mark style="background: var(--pico-del-color);">{{ ip.locked_until }}</mark></td>
+                    <td style="text-align: right;">
+                        <form action="/admin/sessions/unlock" method="post" style="margin: 0; display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="id" value="{{ ip.id }}">
+                            <button type="submit" class="outline contrast" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                                <i class="fa-solid fa-lock-open"></i> Unlock
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">No IP addresses currently locked.</td>
+                </tr>
+            {% else %}
+            {% endfor %}
+        </tbody>
+    </table>
+</article>
+{% endblock %}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Safi Portal{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/assets/css/neon-dark.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <header class="safi-header">
+        <div>
+            <strong><a href="/hello" style="text-decoration: none; color: #66fcf1;"><i class="fa-solid fa-layer-group"></i> Safi</a></strong>
+        </div>
+
+        {% if session.auth_user_id is defined %}
+            <div class="safi-search-bar">
+                <input type="search" id="global-search" name="search" placeholder="Search modules or docs... (Press '/' to focus)">
+            </div>
+
+            <nav>
+                <ul style="margin-bottom: 0;">
+                    <li><a href="/hello"><i class="fa-solid fa-chart-simple"></i> Dashboard</a></li>
+                    <li><a href="/admin/users"><i class="fa-solid fa-users"></i> Users</a></li>
+                    <li><a href="/admin/sessions"><i class="fa-solid fa-shield-halved"></i> Locks</a></li>
+                    <li>
+                        <a href="/logout" class="outline contrast" role="button" style="padding: 0.25rem 0.65rem; font-size: 0.8rem;">
+                            <i class="fa-solid fa-user-check"></i> {{ session.auth_username|default('admin') }}
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        {% else %}
+            <nav>
+                <ul style="margin-bottom: 0;">
+                    <li><a href="/login" class="contrast" role="button" style="padding: 0.25rem 0.75rem;"><i class="fa-solid fa-right-to-bracket"></i> Login</a></li>
+                </ul>
+            </nav>
+        {% endif %}
+    </header>
+
+    <main class="container" style="padding-top: 1.5rem;">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="container" style="padding-bottom: 1.5rem;">
+        <hr>
+        <small>&copy; 2026 Jean Bruenn &bull; Safi Microframework</small>
+    </footer>
+
+    <script>
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                const search = document.getElementById('global-search');
+                if (search) search.focus();
+            }
+        });
+    </script>
+</body>
+</html>

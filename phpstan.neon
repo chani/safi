@@ -1,0 +1,6 @@
+parameters:
+    level: max
+    paths:
+        - init.inc.php
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false

@@ -1,0 +1,12 @@
+/vendor/
+/data/cache/*
+/data/db/*
+*.sqlite
+*.local.php
+.phpunit.result.cache
+.php-cs-fixer.cache
+.phpstan.cache/
+.psalm/
+.RectorCache/
+*.patch
+composer.lock
