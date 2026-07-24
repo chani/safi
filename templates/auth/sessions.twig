@@ -5,8 +5,8 @@
 {% block content %}
 <article>
     <header>
-        <h3><i class="fa-solid fa-shield-virus"></i> Active IP Blacklist &amp; Locks</h3>
-        <p><small>Monitored brute-force rate limits and blocked IP nodes</small></p>
+        <h3><i class="fa-solid fa-shield-virus"></i> Security &amp; Session Management</h3>
+        <p><small>Monitored brute-force rate limits and active session locks</small></p>
     </header>
 
     <table>
@@ -23,7 +23,7 @@
                 <tr>
                     <td>{{ ip.id }}</td>
                     <td><code>{{ ip.ip }}</code></td>
-                    <td><mark style="background: var(--pico-del-color);">{{ ip.locked_until }}</mark></td>
+                    <td><mark style="background: var(--pico-del-color);">{{ ip.lockedUntil }}</mark></td>
                     <td style="text-align: right;">
                         <form action="/admin/sessions/unlock" method="post" style="margin: 0; display: inline;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -38,7 +38,6 @@
                 <tr>
                     <td colspan="4" style="text-align: center;">No IP addresses currently locked.</td>
                 </tr>
-            {% else %}
             {% endfor %}
         </tbody>
     </table>
