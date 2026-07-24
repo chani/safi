@@ -18,6 +18,7 @@
                         <th>Email / Username</th>
                         <th>Role</th>
                         <th>Created</th>
+                        <th style="text-align: right;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -27,10 +28,21 @@
                             <td><strong>{{ u.email }}</strong></td>
                             <td><mark>{{ u.role }}</mark></td>
                             <td><small>{{ u.createdAt }}</small></td>
+                            <td style="text-align: right;">
+                                {% if u.id != session.auth_user_id %}
+                                    <form action="/admin/users/delete" method="post" style="margin: 0; display: inline;" onsubmit="return confirm('Permanently delete user {{ u.email }}?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <input type="hidden" name="id" value="{{ u.id }}">
+                                        <button type="submit" class="outline contrast" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; color: var(--pico-del-color);">
+                                            <i class="fa-solid fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="4">No users registered in database.</td>
+                            <td colspan="5">No users registered in database.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -43,8 +55,8 @@
                 <form action="/admin/users/save" method="post">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label>
-                        Email / Username
-                        <input type="text" name="email" placeholder="user@domain.com" required>
+                        Email Address
+                        <input type="email" name="email" placeholder="user@domain.com" required>
                     </label>
                     <label>
                         Password

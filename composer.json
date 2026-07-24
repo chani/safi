@@ -15,7 +15,7 @@
         "chani/safi-router-wajha": "^0.1.3",
         "chani/safi-view-twig": "^0.1.1",
         "chani/safi-db-redbean": "^0.1.2",
-        "chani/safi-auth": "^0.1.3"
+        "chani/safi-auth": "^0.1.4"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.64",

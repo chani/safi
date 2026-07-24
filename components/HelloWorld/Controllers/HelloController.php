@@ -81,7 +81,7 @@ final class HelloController extends AbstractController
         $this->db->storeModel($metric);
 
         return $this->html(
-            '<button hx-post="/hello/counter" hx-target="#counter-widget" hx-swap="outerHTML" id="counter-widget" class="contrast">
+            '<button hx-post="/hello/counter" hx-vals=\'{"csrf_token": "' . htmlspecialchars($this->security->getCsrfToken()) . '"}\' hx-target="#counter-widget" hx-swap="outerHTML" id="counter-widget" class="contrast">
                 <i class="fa-solid fa-plus"></i> Clicks: ' . htmlspecialchars($metric->value) . '
              </button>'
         );

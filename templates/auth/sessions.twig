@@ -5,8 +5,40 @@
 {% block content %}
 <article>
     <header>
-        <h3><i class="fa-solid fa-shield-virus"></i> Security &amp; Session Management</h3>
-        <p><small>Monitored brute-force rate limits and active session locks</small></p>
+        <h3><i class="fa-solid fa-user-clock"></i> Active User Sessions</h3>
+        <p><small>Currently authenticated active user session contexts</small></p>
+    </header>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Session ID</th>
+                <th>Username</th>
+                <th>IP Address</th>
+                <th>Last Active</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in activeSessions %}
+                <tr>
+                    <td><code>{{ s.sessionId|slice(0, 16) }}...</code></td>
+                    <td><strong>{{ s.username }}</strong></td>
+                    <td><code>{{ s.ipAddress }}</code></td>
+                    <td><small>{{ s.lastActive }}</small></td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">No active sessions registered.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</article>
+
+<article style="margin-top: 2rem;">
+    <header>
+        <h3><i class="fa-solid fa-shield-virus"></i> Blocked &amp; Locked IPs</h3>
+        <p><small>Monitored brute-force rate limits and locked IP nodes</small></p>
     </header>
 
     <table>

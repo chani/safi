@@ -25,11 +25,10 @@
                     <button type="submit" class="contrast"><i class="fa-solid fa-bolt"></i> Update</button>
                 </fieldset>
             </form>
-
             <div style="margin-top: 1.5rem;">
                 <h5><i class="fa-solid fa-arrow-pointer"></i> Reactive State Morphing</h5>
                 <p><small>Server-side counter update without full page refresh:</small></p>
-                <button hx-post="/hello/counter" hx-target="#counter-widget" hx-swap="outerHTML" id="counter-widget" class="contrast">
+                <button hx-post="/hello/counter" hx-vals='{"csrf_token": "{{ csrf_token }}"}' hx-target="#counter-widget" hx-swap="outerHTML" id="counter-widget" class="contrast">
                     <i class="fa-solid fa-plus"></i> Clicks: {{ counter }}
                 </button>
             </div>
