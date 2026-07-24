@@ -24,7 +24,7 @@
   --pico-primary-hover: #45a29e;
   --pico-primary-hover-background: #2b6c68;
   --pico-primary-underline: #66fcf1;
-  
+
   --pico-ins-color: #6a8759;
   --pico-del-color: #ff6b7b;
 }
@@ -89,10 +89,11 @@ header.safi-header nav a:hover {
 
 article {
   border: 1px solid var(--pico-muted-border-color);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-header h2, header h3 {
+header h2,
+header h3 {
   color: #66fcf1;
   letter-spacing: 0.5px;
 }

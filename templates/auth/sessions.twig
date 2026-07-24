@@ -1,77 +1,90 @@
-{% extends "_page.twig" %}
-
-{% block title %}{{ title }}{% endblock %}
-
-{% block content %}
+{% extends "_page.twig" %} {% block title %}{{ title }}{% endblock %} {% block
+content %}
 <article>
-    <header>
-        <h3><i class="fa-solid fa-user-clock"></i> Active User Sessions</h3>
-        <p><small>Currently authenticated active user session contexts</small></p>
-    </header>
+  <header>
+    <h3><i class="fa-solid fa-user-clock"></i> Active User Sessions</h3>
+    <p><small>Currently authenticated active user session contexts</small></p>
+  </header>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Session ID</th>
-                <th>Username</th>
-                <th>IP Address</th>
-                <th>Last Active</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for s in activeSessions %}
-                <tr>
-                    <td><code>{{ s.sessionId|slice(0, 16) }}...</code></td>
-                    <td><strong>{{ s.username }}</strong></td>
-                    <td><code>{{ s.ipAddress }}</code></td>
-                    <td><small>{{ s.lastActive }}</small></td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="4" style="text-align: center;">No active sessions registered.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <table>
+    <thead>
+      <tr>
+        <th>Session ID</th>
+        <th>Username</th>
+        <th>IP Address</th>
+        <th>Last Active</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in activeSessions %}
+      <tr>
+        <td><code>{{ s.sessionId|slice(0, 16) }}...</code></td>
+        <td><strong>{{ s.username }}</strong></td>
+        <td><code>{{ s.ipAddress }}</code></td>
+        <td><small>{{ s.lastActive }}</small></td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="4" style="text-align: center">
+          No active sessions registered.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </article>
 
-<article style="margin-top: 2rem;">
-    <header>
-        <h3><i class="fa-solid fa-shield-virus"></i> Blocked &amp; Locked IPs</h3>
-        <p><small>Monitored brute-force rate limits and locked IP nodes</small></p>
-    </header>
+<article style="margin-top: 2rem">
+  <header>
+    <h3><i class="fa-solid fa-shield-virus"></i> Blocked &amp; Locked IPs</h3>
+    <p><small>Monitored brute-force rate limits and locked IP nodes</small></p>
+  </header>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>IP Address</th>
-                <th>Locked Until</th>
-                <th style="text-align: right;">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for ip in lockedIps %}
-                <tr>
-                    <td>{{ ip.id }}</td>
-                    <td><code>{{ ip.ip }}</code></td>
-                    <td><mark style="background: var(--pico-del-color);">{{ ip.lockedUntil }}</mark></td>
-                    <td style="text-align: right;">
-                        <form action="/admin/sessions/unlock" method="post" style="margin: 0; display: inline;">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                            <input type="hidden" name="id" value="{{ ip.id }}">
-                            <button type="submit" class="outline contrast" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
-                                <i class="fa-solid fa-lock-open"></i> Unlock
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="4" style="text-align: center;">No IP addresses currently locked.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>IP Address</th>
+        <th>Locked Until</th>
+        <th style="text-align: right">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ip in lockedIps %}
+      <tr>
+        <td>{{ ip.id }}</td>
+        <td><code>{{ ip.ip }}</code></td>
+        <td>
+          <mark style="background: var(--pico-del-color)"
+            >{{ ip.lockedUntil }}</mark
+          >
+        </td>
+        <td style="text-align: right">
+          <form
+            action="/admin/sessions/unlock"
+            method="post"
+            style="margin: 0; display: inline"
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <input type="hidden" name="id" value="{{ ip.id }}" />
+            <button
+              type="submit"
+              class="outline contrast"
+              style="padding: 0.2rem 0.5rem; font-size: 0.75rem"
+            >
+              <i class="fa-solid fa-lock-open"></i> Unlock
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="4" style="text-align: center">
+          No IP addresses currently locked.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </article>
 {% endblock %}

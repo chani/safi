@@ -1,54 +1,84 @@
-{% extends "_page.twig" %}
-
-{% block title %}{{ title }}{% endblock %}
-
-{% block content %}
+{% extends "_page.twig" %} {% block title %}{{ title }}{% endblock %} {% block
+content %}
 <article>
-    <header>
-        <h2><i class="fa-solid fa-server"></i> System Overview &amp; Blueprint</h2>
-        <p><small>Pure DI, Attribute Routing, Compact Pico.css &amp; Reactive HTMX</small></p>
-    </header>
+  <header>
+    <h2><i class="fa-solid fa-server"></i> System Overview &amp; Blueprint</h2>
+    <p>
+      <small
+        >Pure DI, Attribute Routing, Compact Pico.css &amp; Reactive HTMX</small
+      >
+    </p>
+  </header>
 
-    <div class="grid">
-        <div>
-            <h5><i class="fa-solid fa-bullhorn"></i> Global Announcement (HTMX)</h5>
-            <div id="notice-target">
-                <blockquote>
-                    "{{ notice }}"
-                </blockquote>
-            </div>
+  <div class="grid">
+    <div>
+      <h5><i class="fa-solid fa-bullhorn"></i> Global Announcement (HTMX)</h5>
+      <div id="notice-target">
+        <blockquote>"{{ notice }}"</blockquote>
+      </div>
 
-            <form hx-post="/hello/notice" hx-target="#notice-target" hx-swap="innerHTML">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <fieldset role="group">
-                    <input type="text" name="notice" placeholder="Update notice via HTMX..." required>
-                    <button type="submit" class="contrast"><i class="fa-solid fa-bolt"></i> Update</button>
-                </fieldset>
-            </form>
-            <div style="margin-top: 1.5rem;">
-                <h5><i class="fa-solid fa-arrow-pointer"></i> Reactive State Morphing</h5>
-                <p><small>Server-side counter update without full page refresh:</small></p>
-                <button hx-post="/hello/counter" hx-vals='{"csrf_token": "{{ csrf_token }}"}' hx-target="#counter-widget" hx-swap="outerHTML" id="counter-widget" class="contrast">
-                    <i class="fa-solid fa-plus"></i> Clicks: {{ counter }}
-                </button>
-            </div>
-        </div>
-
-        <div>
-            <h5><i class="fa-solid fa-microchip"></i> System Telemetry</h5>
-            <ul>
-                <li><strong>Execution Time:</strong> <mark style="background: var(--pico-primary-background); color: #66fcf1;">{{ telemetry.execution_time_ms }} ms</mark></li>
-                <li><strong>PHP Version:</strong> {{ telemetry.php_version }}</li>
-                <li><strong>SAPI Context:</strong> {{ telemetry.sapi }}</li>
-                <li><strong>APCu Accelerator:</strong> 
-                    {% if telemetry.apcu_active %}
-                        <mark style="background: var(--pico-ins-color);">ACTIVE (RAM)</mark>
-                    {% else %}
-                        <mark style="background: var(--pico-del-color);">DISABLED (JSON Fallback)</mark>
-                    {% endif %}
-                </li>
-            </ul>
-        </div>
+      <form
+        hx-post="/hello/notice"
+        hx-target="#notice-target"
+        hx-swap="innerHTML"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <fieldset role="group">
+          <input
+            type="text"
+            name="notice"
+            placeholder="Update notice via HTMX..."
+            required
+          />
+          <button type="submit" class="contrast">
+            <i class="fa-solid fa-bolt"></i> Update
+          </button>
+        </fieldset>
+      </form>
+      <div style="margin-top: 1.5rem">
+        <h5>
+          <i class="fa-solid fa-arrow-pointer"></i> Reactive State Morphing
+        </h5>
+        <p>
+          <small>Server-side counter update without full page refresh:</small>
+        </p>
+        <button
+          hx-post="/hello/counter"
+          hx-vals='{"csrf_token": "{{ csrf_token }}"}'
+          hx-target="#counter-widget"
+          hx-swap="outerHTML"
+          id="counter-widget"
+          class="contrast"
+        >
+          <i class="fa-solid fa-plus"></i> Clicks: {{ counter }}
+        </button>
+      </div>
     </div>
+
+    <div>
+      <h5><i class="fa-solid fa-microchip"></i> System Telemetry</h5>
+      <ul>
+        <li>
+          <strong>Execution Time:</strong>
+          <mark
+            style="background: var(--pico-primary-background); color: #66fcf1"
+            >{{ telemetry.execution_time_ms }} ms</mark
+          >
+        </li>
+        <li><strong>PHP Version:</strong> {{ telemetry.php_version }}</li>
+        <li><strong>SAPI Context:</strong> {{ telemetry.sapi }}</li>
+        <li>
+          <strong>APCu Accelerator:</strong>
+          {% if telemetry.apcu_active %}
+          <mark style="background: var(--pico-ins-color)">ACTIVE (RAM)</mark>
+          {% else %}
+          <mark style="background: var(--pico-del-color)"
+            >DISABLED (JSON Fallback)</mark
+          >
+          {% endif %}
+        </li>
+      </ul>
+    </div>
+  </div>
 </article>
 {% endblock %}

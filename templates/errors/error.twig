@@ -1,20 +1,19 @@
-{% extends "_page.twig" %}
-
-{% block title %}Error {{ code }} - Safi Portal{% endblock %}
-
-{% block content %}
-<div style="max-width: 600px; margin: 3rem auto; text-align: center;">
-    <article>
-        <header>
-            <h1 style="color: var(--pico-del-color); margin-bottom: 0;">{{ code }}</h1>
-            <h3 style="color: var(--pico-color);">{{ title|default('An Error Occurred') }}</h3>
-        </header>
-        <p>{{ message }}</p>
-        <footer>
-            <a href="/" class="contrast" role="button">
-                <i class="fa-solid fa-house"></i> Return to Application
-            </a>
-        </footer>
-    </article>
+{% extends "_page.twig" %} {% block title %}Error {{ code }} - Safi Portal{%
+endblock %} {% block content %}
+<div style="max-width: 600px; margin: 3rem auto; text-align: center">
+  <article>
+    <header>
+      <h1 style="color: var(--pico-del-color); margin-bottom: 0">{{ code }}</h1>
+      <h3 style="color: var(--pico-color)">
+        {{ title|default('An Error Occurred') }}
+      </h3>
+    </header>
+    <p>{{ message }}</p>
+    <footer>
+      <a href="/" class="contrast" role="button">
+        <i class="fa-solid fa-house"></i> Return to Application
+      </a>
+    </footer>
+  </article>
 </div>
 {% endblock %}
