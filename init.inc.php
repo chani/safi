@@ -62,7 +62,6 @@ assert($rawCache instanceof CacheInterface);
 
 $componentManager = new ComponentManager($assembler, $rawCache, $logger);
 
-// Instantiated Service Providers passed directly to Composition Root
 $componentManager->bootProviders([
     new RedBeanServiceProvider($dsn, $dbMode),
     new WajhaServiceProvider(),
@@ -76,7 +75,8 @@ $security->secureSessionStart();
 
 /** @var ViewEngineInterface $viewEngine */
 $viewEngine = $assembler->get(ViewEngineInterface::class);
-$viewEngine->registerNamespace('HelloWorld', __DIR__ . '/components/HelloWorld/Views');
+$componentManager->registerComponentViews($viewEngine, __DIR__ . '/components');
+
 $viewEngine->addGlobal('csrf_token', fn(): string => $security->getCsrfToken());
 $viewEngine->addGlobal('session', fn(): array => $_SESSION ?? []);
 $viewEngine->addGlobal('app_version', Kernel::VERSION);
