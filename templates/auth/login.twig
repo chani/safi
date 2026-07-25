@@ -8,16 +8,25 @@
     </header>
 
     {% if error is defined and error %}
-    <p><mark style="background: var(--pico-del-color)">{{ error }}</mark></p>
+    <p>
+      <mark
+        style="
+          background: rgba(255, 107, 123, 0.2);
+          border: 1px solid #ff6b7b;
+          color: #ff6b7b;
+        "
+        >{{ error }}</mark
+      >
+    </p>
     {% endif %}
 
     <div
       style="
         padding: 0.75rem 1rem;
         margin-bottom: 1.5rem;
-        background: var(--pico-card-sectionning-background-color);
+        background: rgba(255, 255, 255, 0.03);
         border-radius: var(--pico-border-radius);
-        border: 1px solid var(--pico-muted-border-color);
+        border: 1px solid rgba(255, 255, 255, 0.08);
       "
     >
       <small

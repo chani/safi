@@ -1,0 +1,112 @@
+/**
+ * Safi Refined Neon Glass Theme
+ * Balanced Cyan & Muted Copper
+ */
+:root {
+  --pico-font-size: 87.5%;
+  --pico-line-height: 1.4;
+  --pico-border-radius: 0.25rem;
+
+  /* Color Palette */
+  --safi-bg: #121417;
+  --safi-card-bg: rgba(24, 27, 32, 0.75);
+  --safi-card-border: rgba(102, 252, 241, 0.15);
+  --safi-card-border-hover: rgba(102, 252, 241, 0.4);
+
+  --safi-text: #bcbec4;
+  --safi-text-muted: #7a7e85;
+
+  --safi-cyan: #66fcf1;
+  --safi-cyan-dim: #1f4e4b;
+  --safi-copper: #c87d53;
+  --safi-copper-hover: #e28743;
+
+  --pico-background-color: var(--safi-bg);
+  --pico-color: var(--safi-text);
+  --pico-muted-color: var(--safi-text-muted);
+}
+
+body {
+  font-family: monospace, sans-serif;
+  background: radial-gradient(circle at 50% 0%, #1a2026 0%, #121417 70%);
+  color: var(--safi-text);
+  min-height: 100vh;
+}
+
+/* Glassmorphic Cards */
+article,
+.safi-card {
+  background: var(--safi-card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--safi-card-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+article:hover,
+.safi-card:hover {
+  border-color: var(--safi-card-border-hover);
+  box-shadow: 0 0 15px rgba(102, 252, 241, 0.08);
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--safi-cyan);
+  letter-spacing: 0.5px;
+}
+
+/* Copper Buttons */
+button.copper-btn,
+a.copper-btn,
+button.contrast {
+  background: linear-gradient(
+    135deg,
+    rgba(200, 125, 83, 0.2) 0%,
+    rgba(140, 80, 50, 0.3) 100%
+  );
+  border: 1px solid var(--safi-copper);
+  color: #f0c0a0;
+  font-size: 0.8rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+button.copper-btn:hover,
+a.copper-btn:hover,
+button.contrast:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(226, 135, 67, 0.4) 0%,
+    rgba(200, 125, 83, 0.5) 100%
+  );
+  border-color: var(--safi-copper-hover);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(200, 125, 83, 0.25);
+}
+
+/* Form Inputs */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="search"] {
+  background-color: rgba(18, 20, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--safi-cyan);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+input:focus {
+  border-color: var(--safi-cyan) !important;
+  box-shadow: 0 0 8px rgba(102, 252, 241, 0.25) !important;
+}

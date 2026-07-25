@@ -1,111 +1,313 @@
-/**
- * Neon Dark Theme Overrides for Pico.css v2
- * Author: Jean Bruenn
- */
 :root {
-  --pico-font-size: 87.5%;
-  --pico-line-height: 1.4;
-  --pico-form-element-spacing-vertical: 0.35rem;
-  --pico-form-element-spacing-horizontal: 0.65rem;
-  --pico-block-spacing-vertical: 0.75rem;
-  --pico-block-spacing-horizontal: 0.75rem;
-  --pico-border-radius: 0.25rem;
+  --safi-bg: #0a0c0f;
+  --safi-text: #c5c9d0;
+  --safi-text-muted: #6f7480;
 
-  --pico-background-color: #1e1f22;
-  --pico-card-background-color: #2b2d30;
-  --pico-card-sectionning-background-color: #26282b;
-  --pico-color: #bcbec4;
-  --pico-muted-color: #7a7e85;
-  --pico-muted-border-color: #393b40;
-  --pico-border-color: #43454a;
+  --safi-cyan: #66fcf1;
+  --safi-cyan-glow: rgba(102, 252, 241, 0.35);
+  --safi-copper: #c87d53;
+  --safi-copper-glow: rgba(200, 125, 83, 0.3);
 
-  --pico-primary: #66fcf1;
-  --pico-primary-background: #1f4e4b;
-  --pico-primary-hover: #45a29e;
-  --pico-primary-hover-background: #2b6c68;
-  --pico-primary-underline: #66fcf1;
-
-  --pico-ins-color: #6a8759;
-  --pico-del-color: #ff6b7b;
+  --pico-font-size: 85%;
+  --pico-background-color: transparent !important;
+  --pico-color: var(--safi-text);
+  --pico-border-radius: 0.6rem;
 }
 
+/* Base Body Resets */
+html,
 body {
-  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace, sans-serif;
-  background-color: var(--pico-background-color);
-  color: var(--pico-color);
+  background-color: var(--safi-bg) !important;
+  color: var(--safi-text);
   margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+/* Ambient Light Cone Backdrops */
+body::before {
+  content: "";
+  position: fixed;
+  top: -150px;
+  left: -150px;
+  width: 750px;
+  height: 750px;
+  background: radial-gradient(
+    circle,
+    var(--safi-cyan-glow) 0%,
+    rgba(102, 252, 241, 0) 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(75px);
+  mix-blend-mode: screen;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  bottom: -150px;
+  right: -150px;
+  width: 750px;
+  height: 750px;
+  background: radial-gradient(
+    circle,
+    var(--safi-copper-glow) 0%,
+    rgba(200, 125, 83, 0) 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(75px);
+  mix-blend-mode: screen;
+}
+
+/* Main Layout Above Ambient Layer */
+.safi-app-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Sidebar Navigation */
+aside.safi-sidebar {
+  width: 230px;
+  background: rgba(12, 14, 18, 0.55) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 0;
+  flex-shrink: 0;
+}
+
+.safi-sidebar-brand {
+  padding: 0 1.25rem 1.25rem 1.25rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--safi-cyan);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.safi-sidebar-nav {
+  padding: 1.25rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.safi-nav-section-title {
+  padding: 0 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--safi-text-muted);
+  letter-spacing: 0.8px;
+}
+
+.safi-sidebar-nav ul {
+  list-style: none;
+  margin: 0.35rem 0 0 0;
   padding: 0;
 }
 
-/* Header & Navigation Integration */
-header.safi-header {
+.safi-sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--safi-text);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-radius: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.safi-sidebar-nav a:hover,
+.safi-sidebar-nav a.active {
+  background: rgba(102, 252, 241, 0.12);
+  color: var(--safi-cyan);
+  box-shadow: 0 0 12px rgba(102, 252, 241, 0.15);
+}
+
+/* Top Navigation Bar */
+header.safi-topbar {
+  height: 54px;
+  background: rgba(12, 14, 18, 0.55) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.5rem;
-  background-color: var(--pico-card-sectionning-background-color);
-  border-bottom: 1px solid var(--pico-muted-border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  padding: 0 1.5rem;
 }
 
-header.safi-header nav ul {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  list-style: none;
+.safi-topbar-search input[type="search"] {
+  height: 34px;
+  width: 340px;
   margin: 0;
-  padding: 0;
-}
-
-header.safi-header nav ul li {
-  padding: 0;
-  margin: 0;
-}
-
-header.safi-header nav a {
-  color: var(--pico-color);
-  text-decoration: none;
-  font-size: 0.85rem;
-}
-
-header.safi-header nav a:hover {
-  color: var(--pico-primary);
-}
-
-.safi-search-bar {
-  flex-grow: 1;
-  max-width: 400px;
-  margin: 0 1.5rem;
-}
-
-.safi-search-bar input[type="search"] {
-  margin-bottom: 0;
-  height: 2.2rem;
+  background: rgba(10, 12, 15, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   font-size: 0.8rem;
-  background-color: var(--pico-background-color);
-  border: 1px solid var(--pico-border-color);
-  color: var(--pico-primary);
+  color: var(--safi-cyan) !important;
+  border-radius: 20px;
 }
 
-article {
-  border: 1px solid var(--pico-muted-border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+/* Main Container Wrapper */
+.safi-main-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-header h2,
-header h3 {
-  color: #66fcf1;
-  letter-spacing: 0.5px;
+/* Grid Layout Systems */
+.safi-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.safi-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Glassmorphic Cards & Article Panels */
+article,
+.safi-card {
+  background: rgba(16, 20, 26, 0.45) !important;
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(102, 252, 241, 0.22) !important;
+  border-radius: var(--pico-border-radius) !important;
+  padding: 1.25rem;
+  margin-bottom: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(102, 252, 241, 0.05) !important;
+  transition: all 0.25s ease;
+}
+
+article::before,
+.safi-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(102, 252, 241, 0.5) 50%,
+    transparent 100%
+  );
+}
+
+article:hover,
+.safi-card:hover {
+  border-color: rgba(102, 252, 241, 0.45) !important;
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.6),
+    0 0 25px rgba(102, 252, 241, 0.12) !important;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--safi-cyan);
+  margin-top: 0;
+  font-weight: 600;
+  text-shadow: 0 0 12px rgba(102, 252, 241, 0.25);
+}
+
+/* Copper Accent Action Controls */
+button.contrast,
+button.copper-btn,
+a.copper-btn {
+  background: linear-gradient(
+    135deg,
+    rgba(200, 125, 83, 0.3) 0%,
+    rgba(135, 75, 45, 0.4) 100%
+  ) !important;
+  border: 1px solid rgba(200, 125, 83, 0.6) !important;
+  color: #fce3d5 !important;
+  font-weight: 600;
+  font-size: 0.82rem;
+  border-radius: 0.4rem;
+  padding: 0.5rem 1rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(200, 125, 83, 0.2);
+  transition: all 0.2s ease;
+}
+
+button.contrast:hover,
+button.copper-btn:hover,
+a.copper-btn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(226, 135, 67, 0.55) 0%,
+    rgba(200, 125, 83, 0.6) 100%
+  ) !important;
+  border-color: rgba(226, 135, 67, 0.9) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgba(200, 125, 83, 0.4);
+}
+
+/* Monospace Code & Data Tables */
+code,
+pre,
+table {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+table {
+  margin: 0;
+  font-size: 0.8rem;
 }
 
 table th {
-  color: #cc7832;
-  font-size: 0.8rem;
+  color: var(--safi-copper);
   text-transform: uppercase;
+  font-size: 0.7rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-mark {
-  padding: 0.15rem 0.4rem;
-  font-size: 0.8rem;
-  font-weight: bold;
+table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+blockquote {
+  border-left: 2px solid var(--safi-cyan);
+  background: rgba(102, 252, 241, 0.05);
+  padding: 0.6rem 1rem;
+  margin: 0;
 }
