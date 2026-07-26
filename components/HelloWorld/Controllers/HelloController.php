@@ -29,8 +29,8 @@ final class HelloController extends AbstractController
 
         $baseDir = dirname(__DIR__, 3);
 
-        $currentMemoryMb = round(memory_get_usage(true) / 1024 / 1024, 2);
-        $peakMemoryMb = round(memory_get_peak_usage(true) / 1024 / 1024, 2);
+        $currentMemoryMb = round((float) memory_get_usage(true) / 1024.0 / 1024.0, 2);
+        $peakMemoryMb = round((float) memory_get_peak_usage(true) / 1024.0 / 1024.0, 2);
 
         $opcacheActive = function_exists('opcache_get_status') && is_array(opcache_get_status(false));
         $opcacheStats = [
@@ -45,8 +45,8 @@ final class HelloController extends AbstractController
             $status = opcache_get_status(false);
             if (isset($status['memory_usage'], $status['opcache_statistics'])) {
                 $opcacheStats['hit_rate'] = round($status['opcache_statistics']['opcache_hit_rate'], 1);
-                $opcacheStats['used_mem_mb'] = round($status['memory_usage']['used_memory'] / 1024 / 1024, 2);
-                $opcacheStats['free_mem_mb'] = round($status['memory_usage']['free_memory'] / 1024 / 1024, 2);
+                $opcacheStats['used_mem_mb'] = round((float) $status['memory_usage']['used_memory'] / 1024.0 / 1024.0, 2);
+                $opcacheStats['free_mem_mb'] = round((float) $status['memory_usage']['free_memory'] / 1024.0 / 1024.0, 2);
             }
         }
 
@@ -58,12 +58,13 @@ final class HelloController extends AbstractController
             if (is_array($sma) && isset($sma['avail_mem'], $sma['num_seg'], $sma['seg_size'])) {
                 $totalMem = (float) $sma['num_seg'] * (float) $sma['seg_size'];
                 $usedMem = $totalMem - (float) $sma['avail_mem'];
-                $apcuMemoryMb = round($usedMem / 1024 / 1024, 2);
+                $apcuMemoryMb = round($usedMem / 1024.0 / 1024.0, 2);
             }
         }
 
         $dbFile = $baseDir . '/data/db/safi.db';
-        $dbSizeKb = file_exists($dbFile) ? round(filesize($dbFile) / 1024, 1) : 0.0;
+        $fileSize = file_exists($dbFile) ? filesize($dbFile) : 0;
+        $dbSizeKb = ($fileSize !== false && $fileSize > 0) ? round((float) $fileSize / 1024.0, 1) : 0.0;
 
         $configFiles = [
             'config/config.php' => file_exists($baseDir . '/config/config.php'),

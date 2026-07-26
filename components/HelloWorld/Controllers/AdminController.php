@@ -61,7 +61,7 @@ final class AdminController extends AbstractController
 
         foreach ($rawRoutes as $r) {
             $target = 'Closure / Callable';
-            if (is_array($r['handler']) && isset($r['handler'][0], $r['handler'][1])) {
+            if (is_array($r['handler']) && isset($r['handler'][0], $r['handler'][1]) && is_string($r['handler'][0]) && is_string($r['handler'][1])) {
                 $target = $r['handler'][0] . '::' . $r['handler'][1];
             }
 
@@ -90,29 +90,29 @@ final class AdminController extends AbstractController
         $this->enforceAdminRole();
         $baseDir = dirname(__DIR__, 3);
 
-        // 1. Real runtime DI bindings retrieved via object reflection
+        // 1. Real runtime DI bindings retrieved via object class resolution on injected dependencies
         $diBindings = [
             [
-                'contract' => \Safi\Core\Contracts\ViewEngineInterface::class,
-                'implementation' => get_class($this->view),
+                'contract' => ViewEngineInterface::class,
+                'implementation' => $this->view::class,
                 'driver' => 'Template View Adapter',
                 'type' => 'View Extension',
             ],
             [
-                'contract' => \Safi\Core\Contracts\DatabaseDriverInterface::class,
-                'implementation' => get_class($this->db),
+                'contract' => DatabaseDriverInterface::class,
+                'implementation' => $this->db::class,
                 'driver' => 'Persistence Driver',
                 'type' => 'Database Extension',
             ],
             [
-                'contract' => \Safi\Core\Contracts\RouterInterface::class,
-                'implementation' => get_class($this->router),
+                'contract' => RouterInterface::class,
+                'implementation' => $this->router::class,
                 'driver' => 'HTTP Route Dispatcher',
                 'type' => 'Routing Extension',
             ],
             [
-                'contract' => \Safi\Core\Services\SecurityService::class,
-                'implementation' => get_class($this->security),
+                'contract' => SecurityService::class,
+                'implementation' => $this->security::class,
                 'driver' => 'Security & Session Shield',
                 'type' => 'Security Core',
             ],
@@ -121,7 +121,6 @@ final class AdminController extends AbstractController
         // 2. Dynamic discovery of installed framework packages via Composer API
         $loadedExtensions = [];
         if (class_exists(\Composer\InstalledVersions::class)) {
-            /** @var list<string> $installedPackages */
             $installedPackages = \Composer\InstalledVersions::getInstalledPackages();
             foreach ($installedPackages as $pkg) {
                 if (str_starts_with($pkg, 'chani/safi')) {
@@ -177,7 +176,13 @@ final class AdminController extends AbstractController
             $folders = scandir($docsDir);
             if (is_array($folders)) {
                 foreach ($folders as $folder) {
-                    if ($folder === '.' || $folder === '..' || !is_dir($docsDir . '/' . $folder)) {
+                    if ($folder === '.') {
+                        continue;
+                    }
+                    if ($folder === '..') {
+                        continue;
+                    }
+                    if (!is_dir($docsDir . '/' . $folder)) {
                         continue;
                     }
                     $files = scandir($docsDir . '/' . $folder);
@@ -189,7 +194,7 @@ final class AdminController extends AbstractController
                             }
                         }
                     }
-                    if (!empty($mdFiles)) {
+                    if ($mdFiles !== []) {
                         $docsTree[$folder] = $mdFiles;
                     }
                 }
@@ -200,12 +205,12 @@ final class AdminController extends AbstractController
         $requestedFile = is_string($rawFile) ? $rawFile : '00-getting-started/index.md';
         $targetPath = $docsDir ? realpath($docsDir . '/' . ltrim($requestedFile, '/')) : false;
 
-        if ($targetPath === false || !str_starts_with($targetPath, (string) $docsDir) || !str_ends_with($targetPath, '.md')) {
+        if (!is_string($targetPath)) {
             $requestedFile = '00-getting-started/index.md';
             $targetPath = $docsDir ? realpath($docsDir . '/' . $requestedFile) : false;
         }
 
-        $markdownContent = ($targetPath && file_exists($targetPath))
+        $markdownContent = (is_string($targetPath) && file_exists($targetPath))
             ? (string) file_get_contents($targetPath)
             : "# Document Not Found\n\nThe requested documentation file `{$requestedFile}` could not be located in `docs/`.";
 
@@ -227,7 +232,7 @@ final class AdminController extends AbstractController
         }
 
         $user = $this->db->loadModel(User::class, $currentUserId);
-        if (!$user instanceof User || $user->role !== 'admin') {
+        if ($user->role !== 'admin') {
             throw new ValidationException('Access denied: Administrative privileges required.');
         }
     }

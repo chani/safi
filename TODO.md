@@ -14,3 +14,8 @@
 - [ ] Add `/healthz` JSON health probe endpoint.
 - [ ] Add log stream viewer (`/admin/logs`).
 - [ ] Implement Write-Through Materialized Views for caching rendered HTMX partials in APCu.
+
+## APM Integration & Operations
+
+- [ ] Store APM request traces in local SQLite database when sampling or debugging is enabled.
+- [ ] Add CLI telemetry purge command (`php bin/safi apm:purge`) for historical trace cleanup.

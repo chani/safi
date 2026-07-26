@@ -8,6 +8,8 @@ use Rector\ValueObject\PhpVersion;
 return RectorConfig::configure()
     ->withPaths([
         __DIR__ . '/src',
+        __DIR__ . '/components',
+        __DIR__ . '/config',
         __DIR__ . '/tests',
     ])
     ->withPhpVersion(PhpVersion::PHP_85)

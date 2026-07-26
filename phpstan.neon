@@ -2,5 +2,7 @@ parameters:
     level: max
     paths:
         - init.inc.php
+        - src
+        - components
     treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false
