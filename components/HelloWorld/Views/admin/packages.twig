@@ -13,8 +13,8 @@ content %}
       <i class="fa-solid fa-microchip"></i> DI Container &amp; Engine Registry
     </h3>
     <small style="color: var(--safi-text-muted)"
-      >Real-time introspection of active DI bindings, underlying library
-      versions, and application components</small
+      >Real-time dynamic introspection of active DI instances, package versions,
+      and domain components</small
     >
   </div>
   <a
@@ -26,16 +26,15 @@ content %}
   </a>
 </div>
 
-<!-- SECTION 1: ACTIVE DI BINDINGS WITH ENGINE VERSIONS -->
+<!-- SECTION 1: ACTIVE DI BINDINGS -->
 <article style="margin-bottom: 1.5rem">
   <header style="margin-bottom: 1rem">
     <h4 style="margin: 0; font-size: 1.1rem; color: var(--safi-cyan)">
       <i class="fa-solid fa-plug"></i> 1. Active DI Service Bindings &amp;
-      Library Versions
+      Concrete Classes
     </h4>
     <small style="color: var(--safi-text-muted)"
-      >Runtime contract bindings resolved by Safi Assembler with exact engine
-      versions</small
+      >Real-time class instances resolved by Safi Assembler</small
     >
   </header>
 
@@ -43,10 +42,10 @@ content %}
     <thead>
       <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1)">
         <th style="padding: 0.6rem; text-align: left">Interface / Contract</th>
-        <th style="padding: 0.6rem; text-align: left">Safi Extension Class</th>
         <th style="padding: 0.6rem; text-align: left">
-          Underlying Library &amp; Version
+          Active Implementation Class
         </th>
+        <th style="padding: 0.6rem; text-align: left">Role / Driver</th>
         <th style="padding: 0.6rem; text-align: left">Category</th>
       </tr>
     </thead>
@@ -63,7 +62,7 @@ content %}
         </td>
         <td style="padding: 0.6rem">
           <span style="color: #45d8a0; font-weight: 600"
-            >{{ binding.engine_version }}</span
+            >{{ binding.driver }}</span
           >
         </td>
         <td style="padding: 0.6rem">
@@ -77,26 +76,25 @@ content %}
   </table>
 </article>
 
-<!-- SECTION 2: LOADED EXTENSIONS & ENGINES -->
+<!-- SECTION 2: LOADED COMPOSER PACKAGES -->
 <article style="margin-bottom: 1.5rem">
   <header style="margin-bottom: 1rem">
     <h4 style="margin: 0; font-size: 1.1rem; color: var(--safi-copper)">
-      <i class="fa-solid fa-puzzle-piece"></i> 2. Infrastructure Extensions
-      &amp; Wrapped Engines
+      <i class="fa-solid fa-puzzle-piece"></i> 2. Installed Safi Packages
+      (Composer API)
     </h4>
     <small style="color: var(--safi-text-muted)"
-      >Pluggable driver extensions active in PHP runtime context</small
+      >Installed framework extensions detected dynamically via Composer
+      InstalledVersions</small
     >
   </header>
 
   <table style="width: 100%; font-size: 0.88rem; border-collapse: collapse">
     <thead>
       <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1)">
-        <th style="padding: 0.6rem; text-align: left">Extension Package</th>
-        <th style="padding: 0.6rem; text-align: left">PHP Namespace</th>
-        <th style="padding: 0.6rem; text-align: left">
-          Wrapped Engine / Library
-        </th>
+        <th style="padding: 0.6rem; text-align: left">Package Name</th>
+        <th style="padding: 0.6rem; text-align: left">Installed Version</th>
+        <th style="padding: 0.6rem; text-align: left">Runtime Status</th>
       </tr>
     </thead>
     <tbody>
@@ -106,11 +104,11 @@ content %}
           <strong style="color: var(--safi-copper)">{{ ext.name }}</strong>
         </td>
         <td style="padding: 0.6rem">
-          <code>{{ ext.namespace }}</code>
+          <code>{{ ext.version }}</code>
         </td>
         <td style="padding: 0.6rem">
           <span style="color: var(--safi-cyan); font-weight: 600"
-            >{{ ext.engine }}</span
+            >{{ ext.status }}</span
           >
         </td>
       </tr>

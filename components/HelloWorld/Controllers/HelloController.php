@@ -13,6 +13,9 @@ namespace Components\HelloWorld\Controllers;
 use Safi\Core\AbstractController;
 use Safi\Core\Attributes\Route;
 use Safi\Core\Http\Response;
+use Safi\Core\Models\Job;
+use Safi\Extensions\Auth\Models\LockedIp;
+use Safi\Extensions\Auth\Models\LoginAttempt;
 
 final class HelloController extends AbstractController
 {
@@ -26,11 +29,9 @@ final class HelloController extends AbstractController
 
         $baseDir = dirname(__DIR__, 3);
 
-        // 1. Memory Metrics
         $currentMemoryMb = round(memory_get_usage(true) / 1024 / 1024, 2);
         $peakMemoryMb = round(memory_get_peak_usage(true) / 1024 / 1024, 2);
 
-        // 2. OPcache Telemetry
         $opcacheActive = function_exists('opcache_get_status') && is_array(opcache_get_status(false));
         $opcacheStats = [
             'active' => $opcacheActive,
@@ -49,7 +50,6 @@ final class HelloController extends AbstractController
             }
         }
 
-        // 3. APCu Telemetry
         $apcuActive = extension_loaded('apcu') && apcu_enabled();
         $apcuMemoryMb = 0.0;
         if ($apcuActive && function_exists('apcu_sma_info')) {
@@ -62,18 +62,15 @@ final class HelloController extends AbstractController
             }
         }
 
-        // 4. Database Storage Metrics
         $dbFile = $baseDir . '/data/db/safi.db';
         $dbSizeKb = file_exists($dbFile) ? round(filesize($dbFile) / 1024, 1) : 0.0;
 
-        // 5. Complete Configuration Checklist (Fully Renderable)
         $configFiles = [
             'config/config.php' => file_exists($baseDir . '/config/config.php'),
             'config/config.local.php' => file_exists($baseDir . '/config/config.local.php'),
             'init.inc.php' => file_exists($baseDir . '/init.inc.php'),
         ];
 
-        // 6. Recent Error Logs Stream
         $logFile = $baseDir . '/data/logs/app.log';
         $recentLogs = [];
         if (file_exists($logFile)) {
@@ -83,34 +80,20 @@ final class HelloController extends AbstractController
             }
         }
 
-        // 7. Slow Queries Audit Log
-        $slowQueries = [];
-        try {
-            $slowQueries = $this->db->query("SELECT * FROM slow_query_log ORDER BY id DESC LIMIT 5");
-        } catch (\Throwable) {
-            // Guard
-        }
-
-        // 8. Security & Throttling Metrics
-        $bannedIpsCount = 0;
+        $lockedIpsCount = 0;
         $failedAttemptsCount = 0;
         try {
-            $rows = $this->db->query("SELECT COUNT(*) as cnt FROM auth_throttle WHERE is_banned = 1");
-            $bannedIpsCount = (int) ($rows[0]['cnt'] ?? 0);
-            $rowsAttempts = $this->db->query("SELECT COUNT(*) as cnt FROM auth_throttle WHERE attempts > 0");
-            $failedAttemptsCount = (int) ($rowsAttempts[0]['cnt'] ?? 0);
+            $lockedIpsCount = $this->db->countModels(LockedIp::class);
+            $failedAttemptsCount = $this->db->countModels(LoginAttempt::class);
         } catch (\Throwable) {
             // Guard
         }
 
-        // 9. Job Queue Summary
         $pendingJobs = 0;
         $failedJobs = 0;
         try {
-            $pRows = $this->db->query("SELECT COUNT(*) as cnt FROM job_queue WHERE status = 'pending'");
-            $pendingJobs = (int) ($pRows[0]['cnt'] ?? 0);
-            $fRows = $this->db->query("SELECT COUNT(*) as cnt FROM job_queue WHERE status = 'failed'");
-            $failedJobs = (int) ($fRows[0]['cnt'] ?? 0);
+            $pendingJobs = $this->db->countModels(Job::class, 'status = ?', ['pending']);
+            $failedJobs = $this->db->countModels(Job::class, 'status = ?', ['failed']);
         } catch (\Throwable) {
             // Guard
         }
@@ -127,11 +110,11 @@ final class HelloController extends AbstractController
             'db_size_kb' => $dbSizeKb,
             'config_files' => $configFiles,
             'recent_logs' => $recentLogs,
-            'slow_queries' => $slowQueries,
-            'banned_ips' => $bannedIpsCount,
+            'banned_ips' => $lockedIpsCount,
             'failed_attempts' => $failedAttemptsCount,
             'pending_jobs' => $pendingJobs,
             'failed_jobs' => $failedJobs,
+            'slow_queries' => [],
         ];
 
         return $this->render('@HelloWorld/index.twig', [

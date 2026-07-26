@@ -12,172 +12,130 @@ namespace Components\HelloWorld\Controllers;
 
 use Safi\Core\AbstractController;
 use Safi\Core\Attributes\Route;
+use Safi\Core\Contracts\DatabaseDriverInterface;
+use Safi\Core\Contracts\RouterInterface;
+use Safi\Core\Contracts\ViewEngineInterface;
+use Safi\Core\Exception\ValidationException;
+use Safi\Core\Http\Request;
 use Safi\Core\Http\Response;
+use Safi\Core\Kernel;
+use Safi\Core\Services\SecurityService;
+use Safi\Extensions\Auth\Models\User;
 
 final class AdminController extends AbstractController
 {
+    public function __construct(
+        ViewEngineInterface $view,
+        Request $request,
+        SecurityService $security,
+        DatabaseDriverInterface $db,
+        private readonly RouterInterface $router,
+        private readonly Kernel $kernel,
+    ) {
+        parent::__construct($view, $request, $security, $db);
+    }
+
     #[Route('/admin/routes', method: 'GET', name: 'admin.routes')]
     public function routes(): Response
     {
-        $routes = [
-            [
-                'method' => 'GET',
-                'path' => '/',
-                'name' => 'home',
-                'target' => 'Components\HelloWorld\Controllers\HelloController::index',
-                'middlewares' => ['CorrelationId', 'SecurityHeaders', 'Router'],
-                'public' => true,
-            ],
-            [
-                'method' => 'GET',
-                'path' => '/hello',
-                'name' => 'hello.index',
-                'target' => 'Components\HelloWorld\Controllers\HelloController::index',
-                'middlewares' => ['CorrelationId', 'SecurityHeaders', 'Router'],
-                'public' => true,
-            ],
-            [
-                'method' => 'GET',
-                'path' => '/login',
-                'name' => 'auth.login.show',
-                'target' => 'Components\HelloWorld\Controllers\AuthController::showLogin',
-                'middlewares' => ['CorrelationId', 'SecurityHeaders', 'Router'],
-                'public' => true,
-            ],
-            [
-                'method' => 'POST',
-                'path' => '/login',
-                'name' => 'auth.login',
-                'target' => 'Components\HelloWorld\Controllers\AuthController::login',
-                'middlewares' => ['CorrelationId', 'SecurityHeaders', 'Csrf', 'Router'],
-                'public' => true,
-            ],
-            [
-                'method' => 'GET',
-                'path' => '/logout',
-                'name' => 'auth.logout',
-                'target' => 'Components\HelloWorld\Controllers\AuthController::logout',
-                'middlewares' => ['CorrelationId', 'SecurityHeaders', 'Auth', 'Router'],
-                'public' => false,
-            ],
-            [
-                'method' => 'GET',
-                'path' => '/admin/routes',
-                'name' => 'admin.routes',
-                'target' => 'Components\HelloWorld\Controllers\AdminController::routes',
-                'middlewares' => ['CorrelationId', 'SecurityHeaders', 'Auth', 'Router'],
-                'public' => false,
-            ],
-            [
-                'method' => 'GET',
-                'path' => '/admin/packages',
-                'name' => 'admin.packages',
-                'target' => 'Components\HelloWorld\Controllers\AdminController::packages',
-                'middlewares' => ['CorrelationId', 'SecurityHeaders', 'Auth', 'Router'],
-                'public' => false,
-            ],
-            [
-                'method' => 'GET',
-                'path' => '/admin/docs',
-                'name' => 'admin.docs',
-                'target' => 'Components\HelloWorld\Controllers\AdminController::docs',
-                'middlewares' => ['CorrelationId', 'SecurityHeaders', 'Auth', 'Router'],
-                'public' => false,
-            ],
-        ];
+        $this->enforceAdminRole();
+
+        // 1. Dynamically extract registered pipeline middlewares from Kernel
+        $pipelineMiddlewares = [];
+        foreach ($this->kernel->getMiddlewares() as $mw) {
+            if (is_string($mw)) {
+                $parts = explode('\\', $mw);
+                $pipelineMiddlewares[] = end($parts);
+            } elseif (is_object($mw)) {
+                $parts = explode('\\', $mw::class);
+                $pipelineMiddlewares[] = end($parts);
+            } else {
+                $pipelineMiddlewares[] = 'Closure';
+            }
+        }
+        $pipelineMiddlewares[] = 'Router';
+
+        // 2. Read live route definitions from router
+        $rawRoutes = $this->router->getRoutes();
+        $formattedRoutes = [];
+
+        foreach ($rawRoutes as $r) {
+            $target = 'Closure / Callable';
+            if (is_array($r['handler']) && isset($r['handler'][0], $r['handler'][1])) {
+                $target = $r['handler'][0] . '::' . $r['handler'][1];
+            }
+
+            $isPublic = isset($r['options']['public']) && $r['options']['public'] === true;
+
+            $formattedRoutes[] = [
+                'method' => $r['method'],
+                'path' => $r['path'],
+                'name' => $r['name'] ?? '-',
+                'target' => $target,
+                'middlewares' => $pipelineMiddlewares,
+                'public' => $isPublic,
+            ];
+        }
 
         return $this->render('@HelloWorld/admin/routes.twig', [
             'title' => 'Route Topology Explorer',
-            'routes' => $routes,
-            'total_routes' => count($routes),
+            'routes' => $formattedRoutes,
+            'total_routes' => count($formattedRoutes),
         ]);
     }
 
     #[Route('/admin/packages', method: 'GET', name: 'admin.packages')]
     public function packages(): Response
     {
+        $this->enforceAdminRole();
         $baseDir = dirname(__DIR__, 3);
 
-        $detectVersion = function (string $className, string $packageName, ?string $constantName = null): string {
-            if (class_exists(\Composer\InstalledVersions::class) && \Composer\InstalledVersions::isInstalled($packageName)) {
-                $ver = \Composer\InstalledVersions::getPrettyVersion($packageName);
-                if (is_string($ver)) {
-                    return $ver;
-                }
-            }
-
-            if ($constantName !== null && defined($constantName)) {
-                return (string) constant($constantName);
-            }
-
-            if (class_exists($className)) {
-                return 'Loaded (Runtime Active)';
-            }
-
-            return 'Unknown Version';
-        };
-
-        $twigVersion = $detectVersion('\Twig\Environment', 'twig/twig', '\Twig\Environment::VERSION');
-        
-        $redbeanVersion = 'Loaded';
-        if (class_exists('\R') && method_exists('\R', 'getVersion')) {
-            $redbeanVersion = \R::getVersion();
-        } else {
-            $redbeanVersion = $detectVersion('\RedBeanPHP\OODB', 'redbeanphp/redbean');
-        }
-
-        $wajhaVersion = $detectVersion('\Wajha\Router\Router', 'chani/wajha');
-        if ($wajhaVersion === 'Unknown Version') {
-            $wajhaVersion = $detectVersion('\Wajha\Router', 'wajha/router');
-        }
-
+        // 1. Real runtime DI bindings retrieved via object reflection
         $diBindings = [
             [
-                'contract' => 'Safi\Core\Contracts\ViewEngineInterface',
-                'implementation' => 'Safi\Extensions\ViewTwig\TwigEngine',
-                'driver' => 'Twig Engine',
-                'engine_version' => 'Twig ' . $twigVersion,
+                'contract' => \Safi\Core\Contracts\ViewEngineInterface::class,
+                'implementation' => get_class($this->view),
+                'driver' => 'Template View Adapter',
                 'type' => 'View Extension',
             ],
             [
-                'contract' => 'Safi\Core\Contracts\DatabaseDriverInterface',
-                'implementation' => 'Safi\Extensions\DbRedBean\RedBeanDriver',
-                'driver' => 'RedBeanPHP ORM',
-                'engine_version' => 'RedBean ' . $redbeanVersion,
+                'contract' => \Safi\Core\Contracts\DatabaseDriverInterface::class,
+                'implementation' => get_class($this->db),
+                'driver' => 'Persistence Driver',
                 'type' => 'Database Extension',
             ],
             [
-                'contract' => 'Safi\Core\Contracts\RouterInterface',
-                'implementation' => 'Safi\Extensions\RouterWajha\WajhaRouter',
-                'driver' => 'Wajha High-Speed Router',
-                'engine_version' => 'Wajha ' . $wajhaVersion,
+                'contract' => \Safi\Core\Contracts\RouterInterface::class,
+                'implementation' => get_class($this->router),
+                'driver' => 'HTTP Route Dispatcher',
                 'type' => 'Routing Extension',
             ],
             [
-                'contract' => 'Psr\SimpleCache\CacheInterface',
-                'implementation' => extension_loaded('apcu') && apcu_enabled()
-                    ? 'Safi\Core\Cache\ApcuCache'
-                    : 'Safi\Core\Cache\JsonFallbackCache',
-                'driver' => extension_loaded('apcu') && apcu_enabled() ? 'APCu Shared RAM' : 'Filesystem JSON',
-                'engine_version' => extension_loaded('apcu') ? 'APCu ' . phpversion('apcu') : 'PHP Native File I/O',
-                'type' => 'Cache Driver',
-            ],
-            [
-                'contract' => 'Safi\Extensions\Auth\AuthService',
-                'implementation' => 'Safi\Extensions\Auth\AuthService',
-                'driver' => 'Safi Identity Shield',
-                'engine_version' => 'Safi Native Auth v1.0',
-                'type' => 'Auth Extension',
+                'contract' => \Safi\Core\Services\SecurityService::class,
+                'implementation' => get_class($this->security),
+                'driver' => 'Security & Session Shield',
+                'type' => 'Security Core',
             ],
         ];
 
-        $loadedExtensions = [
-            ['name' => 'safi/safi-view-twig', 'namespace' => 'Safi\Extensions\ViewTwig', 'engine' => 'Twig Template Engine (' . $twigVersion . ')'],
-            ['name' => 'safi/safi-db-redbean', 'namespace' => 'Safi\Extensions\DbRedBean', 'engine' => 'RedBeanPHP ORM (' . $redbeanVersion . ')'],
-            ['name' => 'safi/safi-router-wajha', 'namespace' => 'Safi\Extensions\RouterWajha', 'engine' => 'Wajha Router (' . $wajhaVersion . ')'],
-            ['name' => 'safi/safi-auth', 'namespace' => 'Safi\Extensions\Auth', 'engine' => 'Safi Security Core'],
-        ];
+        // 2. Dynamic discovery of installed framework packages via Composer API
+        $loadedExtensions = [];
+        if (class_exists(\Composer\InstalledVersions::class)) {
+            /** @var list<string> $installedPackages */
+            $installedPackages = \Composer\InstalledVersions::getInstalledPackages();
+            foreach ($installedPackages as $pkg) {
+                if (str_starts_with($pkg, 'chani/safi')) {
+                    $ver = \Composer\InstalledVersions::getPrettyVersion($pkg) ?? 'Active';
+                    $loadedExtensions[] = [
+                        'name' => $pkg,
+                        'version' => $ver,
+                        'status' => 'Runtime Active Package',
+                    ];
+                }
+            }
+        }
 
+        // 3. Dynamic scan of application domain components in components/*
         $installedComponents = [];
         $componentsDir = $baseDir . '/components';
         if (is_dir($componentsDir)) {
@@ -210,10 +168,10 @@ final class AdminController extends AbstractController
     #[Route('/admin/docs', method: 'GET', name: 'admin.docs')]
     public function docs(): Response
     {
+        $this->enforceAdminRole();
         $baseDir = dirname(__DIR__, 3);
         $docsDir = realpath($baseDir . '/docs');
 
-        // 1. Scan docs directory recursively
         $docsTree = [];
         if ($docsDir && is_dir($docsDir)) {
             $folders = scandir($docsDir);
@@ -238,7 +196,6 @@ final class AdminController extends AbstractController
             }
         }
 
-        // 2. Resolve requested document safely (Path Traversal Protection)
         $rawFile = $this->request->get('file');
         $requestedFile = is_string($rawFile) ? $rawFile : '00-getting-started/index.md';
         $targetPath = $docsDir ? realpath($docsDir . '/' . ltrim($requestedFile, '/')) : false;
@@ -248,8 +205,8 @@ final class AdminController extends AbstractController
             $targetPath = $docsDir ? realpath($docsDir . '/' . $requestedFile) : false;
         }
 
-        $markdownContent = ($targetPath && file_exists($targetPath)) 
-            ? (string) file_get_contents($targetPath) 
+        $markdownContent = ($targetPath && file_exists($targetPath))
+            ? (string) file_get_contents($targetPath)
             : "# Document Not Found\n\nThe requested documentation file `{$requestedFile}` could not be located in `docs/`.";
 
         return $this->render('@HelloWorld/admin/docs.twig', [
@@ -258,5 +215,20 @@ final class AdminController extends AbstractController
             'active_file' => $requestedFile,
             'markdown_content' => $markdownContent,
         ]);
+    }
+
+    private function enforceAdminRole(): void
+    {
+        $rawCurrentUserId = $_SESSION['auth_user_id'] ?? 0;
+        $currentUserId = is_numeric($rawCurrentUserId) ? (int) $rawCurrentUserId : 0;
+
+        if ($currentUserId <= 0) {
+            throw new ValidationException('Access denied: Authentication required.');
+        }
+
+        $user = $this->db->loadModel(User::class, $currentUserId);
+        if (!$user instanceof User || $user->role !== 'admin') {
+            throw new ValidationException('Access denied: Administrative privileges required.');
+        }
     }
 }

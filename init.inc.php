@@ -60,7 +60,7 @@ $assembler->set(CacheInterface::class, fn(ContainerInterface $_c): CacheInterfac
 $rawCache = $assembler->get(CacheInterface::class);
 assert($rawCache instanceof CacheInterface);
 
-$componentManager = new ComponentManager($assembler, $rawCache, $logger);
+$componentManager = new ComponentManager($assembler, $logger);
 
 $componentManager->bootProviders([
     new RedBeanServiceProvider($dsn, $dbMode),
@@ -83,15 +83,23 @@ $viewEngine->addGlobal('app_version', Kernel::VERSION);
 
 /** @var RouterInterface $router */
 $router = $assembler->get(RouterInterface::class);
-
 $componentManager->registerAttributeRoutes($router, __DIR__ . '/components');
 
-$authSrcPath = is_dir(__DIR__ . '/vendor/chani/safi-auth/src')
-    ? __DIR__ . '/vendor/chani/safi-auth/src'
-    : __DIR__ . '/../safi-auth/src';
-
-if (is_dir($authSrcPath)) {
-    $componentManager->registerAttributeRoutes($router, $authSrcPath);
+// Dynamically discover attribute routes across installed Safi vendor extensions
+$vendorDir = __DIR__ . '/vendor/chani';
+if (is_dir($vendorDir)) {
+    $packages = scandir($vendorDir);
+    if (is_array($packages)) {
+        foreach ($packages as $pkg) {
+            if ($pkg === '.' || $pkg === '..') {
+                continue;
+            }
+            $pkgSrc = $vendorDir . '/' . $pkg . '/src';
+            if (is_dir($pkgSrc)) {
+                $componentManager->registerAttributeRoutes($router, $pkgSrc);
+            }
+        }
+    }
 }
 
 $assembler->set(Kernel::class, static fn(ContainerInterface $_c): Kernel => new Kernel(
