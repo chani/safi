@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Psr\SimpleCache\CacheInterface;
 use Safi\Core\Assembler;
 use Safi\Core\ComponentManager;
 use Safi\Core\Contracts\RouterInterface;
@@ -19,12 +18,15 @@ use Safi\Core\Contracts\ViewEngineInterface;
 use Safi\Core\Http\CorrelationIdMiddleware;
 use Safi\Core\Kernel;
 use Safi\Core\Logger;
-use Safi\Core\Services\CacheService;
 use Safi\Core\Services\SecurityService;
 use Safi\Extensions\Auth\AuthMiddleware;
 use Safi\Extensions\Auth\AuthServiceProvider;
+use Safi\Extensions\Cache\CacheServiceProvider;
 use Safi\Extensions\DbRedBean\RedBeanServiceProvider;
+use Safi\Extensions\Queue\QueueServiceProvider;
 use Safi\Extensions\RouterWajha\WajhaServiceProvider;
+use Safi\Extensions\Search\SearchServiceProvider;
+use Safi\Extensions\Session\SessionServiceProvider;
 use Safi\Extensions\ViewTwig\TwigServiceProvider;
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -55,52 +57,65 @@ $assembler = new Assembler($logger);
 
 $assembler->set(ContainerInterface::class, $assembler);
 $assembler->set(LoggerInterface::class, $logger);
-$assembler->set(CacheInterface::class, fn(ContainerInterface $_c): CacheInterface => new CacheService());
-
-$rawCache = $assembler->get(CacheInterface::class);
-assert($rawCache instanceof CacheInterface);
 
 $componentManager = new ComponentManager($assembler, $logger);
 
 $componentManager->bootProviders([
+    new CacheServiceProvider(),
+    new SessionServiceProvider(),
     new RedBeanServiceProvider($dsn, $dbMode),
     new WajhaServiceProvider(),
     new AuthServiceProvider(),
+    new QueueServiceProvider(),
+    new SearchServiceProvider(),
     new TwigServiceProvider($templateDir, $cacheDir, $debug),
 ]);
 
 /** @var SecurityService $security */
 $security = $assembler->get(SecurityService::class);
-$security->secureSessionStart();
 
 /** @var ViewEngineInterface $viewEngine */
 $viewEngine = $assembler->get(ViewEngineInterface::class);
+
 $componentManager->registerComponentViews($viewEngine, __DIR__ . '/components');
 
-$viewEngine->addGlobal('csrf_token', fn(): string => $security->getCsrfToken());
-$viewEngine->addGlobal('session', fn(): array => $_SESSION ?? []);
-$viewEngine->addGlobal('app_version', Kernel::VERSION);
+if (is_dir(__DIR__ . '/templates/auth')) {
+    $viewEngine->registerNamespace('Auth', __DIR__ . '/templates/auth');
+}
 
 /** @var RouterInterface $router */
 $router = $assembler->get(RouterInterface::class);
 $componentManager->registerAttributeRoutes($router, __DIR__ . '/components');
 
-// Dynamically discover attribute routes across installed Safi vendor extensions
-$vendorDir = __DIR__ . '/vendor/chani';
-if (is_dir($vendorDir)) {
-    $packages = scandir($vendorDir);
-    if (is_array($packages)) {
-        foreach ($packages as $pkg) {
-            if ($pkg === '.' || $pkg === '..') {
-                continue;
-            }
-            $pkgSrc = $vendorDir . '/' . $pkg . '/src';
-            if (is_dir($pkgSrc)) {
-                $componentManager->registerAttributeRoutes($router, $pkgSrc);
-            }
+if (class_exists(\Composer\InstalledVersions::class)) {
+    foreach (\Composer\InstalledVersions::getInstalledPackages() as $package) {
+        if (!str_starts_with($package, 'chani/')) {
+            continue;
+        }
+        $installPath = \Composer\InstalledVersions::getInstallPath($package);
+        if (!is_string($installPath)) {
+            continue;
+        }
+
+        $packageName = basename($package);
+        $cleanName = preg_replace('/^safi-/', '', $packageName) ?? $packageName;
+        $namespace = ucfirst($cleanName);
+
+        if (is_dir($installPath . '/templates')) {
+            $viewEngine->registerNamespace($namespace, $installPath . '/templates');
+        }
+        if (is_dir($installPath . '/components')) {
+            $componentManager->registerComponentViews($viewEngine, $installPath . '/components');
+        }
+        if (is_dir($installPath . '/src')) {
+            $componentManager->registerAttributeRoutes($router, $installPath . '/src');
         }
     }
 }
+
+$viewEngine->addGlobal('csrf_token', fn(): string => $security->getCsrfToken());
+$viewEngine->addGlobal('session', fn(): array => $_SESSION ?? []);
+$viewEngine->addGlobal('app_version', Kernel::VERSION);
 
 $assembler->set(Kernel::class, static fn(ContainerInterface $_c): Kernel => new Kernel(
     $assembler,

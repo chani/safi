@@ -11,11 +11,15 @@
     ],
     "require": {
         "php": "^8.5",
-        "chani/safi-core": "^0.1.4",
-        "chani/safi-router-wajha": "^0.1.4",
-        "chani/safi-view-twig": "^0.1.1",
-        "chani/safi-db-redbean": "^0.1.2",
-        "chani/safi-auth": "^0.1.5"
+        "chani/safi-core": "*",
+        "chani/safi-router-wajha": "*",
+        "chani/safi-view-twig": "*",
+        "chani/safi-db-redbean": "*",
+        "chani/safi-auth": "*",
+        "chani/safi-queue": "*",
+        "chani/safi-search": "*",
+        "chani/safi-session": "*",
+        "chani/safi-cache": "*"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.64",
@@ -43,5 +47,33 @@
     },
     "config": {
         "optimize-autoloader": true
-    }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Safi\\Core\\": "../safi-core/src/",
+            "Safi\\Extensions\\Auth\\": "../safi-auth/src/",
+            "Safi\\Extensions\\DbRedBean\\": "../safi-db-redbean/src/",
+            "Safi\\Extensions\\RouterWajha\\": "../safi-router-wajha/src/",
+            "Safi\\Extensions\\ViewTwig\\": "../safi-view-twig/src/",
+            "Safi\\Extensions\\I18n\\": "../safi-i18n/src/",
+            "Safi\\Extensions\\Queue\\": "../safi-queue/src/",
+            "Safi\\Extensions\\Search\\": "../safi-search/src/",
+            "Safi\\Extensions\\Session\\": "../safi-session/src/",
+            "Safi\\Extensions\\Cache\\": "../safi-cache/src/",
+            "Safi\\Wajha\\": "../wajha-router/src/"
+        }
+    },
+    "version": "0.1.12",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../safi-*"
+        },
+        {
+            "type": "path",
+            "url": "../wajha-router"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

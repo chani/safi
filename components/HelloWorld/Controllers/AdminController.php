@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Components\HelloWorld\Controllers;
 
+use Psr\Log\NullLogger;
 use Safi\Core\AbstractController;
 use Safi\Core\Attributes\Route;
 use Safi\Core\Contracts\DatabaseDriverInterface;
@@ -21,6 +22,7 @@ use Safi\Core\Http\Response;
 use Safi\Core\Kernel;
 use Safi\Core\Services\SecurityService;
 use Safi\Extensions\Auth\Models\User;
+use Safi\Extensions\Session\SessionService;
 
 final class AdminController extends AbstractController
 {
@@ -31,6 +33,7 @@ final class AdminController extends AbstractController
         DatabaseDriverInterface $db,
         private readonly RouterInterface $router,
         private readonly Kernel $kernel,
+        private readonly ?SessionService $session = null,
     ) {
         parent::__construct($view, $request, $security, $db);
     }
@@ -224,7 +227,7 @@ final class AdminController extends AbstractController
 
     private function enforceAdminRole(): void
     {
-        $rawCurrentUserId = $_SESSION['auth_user_id'] ?? 0;
+        $rawCurrentUserId = $this->getSession()->get('auth_user_id', 0);
         $currentUserId = is_numeric($rawCurrentUserId) ? (int) $rawCurrentUserId : 0;
 
         if ($currentUserId <= 0) {
@@ -235,5 +238,10 @@ final class AdminController extends AbstractController
         if ($user->role !== 'admin') {
             throw new ValidationException('Access denied: Administrative privileges required.');
         }
+    }
+
+    private function getSession(): SessionService
+    {
+        return $this->session ?? new SessionService(new NullLogger());
     }
 }

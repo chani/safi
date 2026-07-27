@@ -11,8 +11,9 @@ declare(strict_types=1);
 
 use Safi\Core\Cli\CommandKernel;
 use Safi\Core\Cli\Commands\DiDumpCommand;
-use Safi\Core\Cli\Commands\WorkerCommand;
 use Safi\Extensions\Auth\Cli\Commands\AuthInitCommand;
+use Safi\Extensions\Queue\Cli\Commands\WorkerCommand;
+use Safi\Extensions\Search\Cli\Commands\ReindexCommand;
 
 /** @var array{assembler: \Psr\Container\ContainerInterface} $boot */
 $boot = require __DIR__ . '/../init.inc.php';
@@ -20,11 +21,14 @@ $boot = require __DIR__ . '/../init.inc.php';
 $container = $boot['assembler'];
 $cliKernel = new CommandKernel($container);
 
-// Register core CLI commands
 $cliKernel->registerCommandClass(DiDumpCommand::class);
-$cliKernel->registerCommandClass(WorkerCommand::class);
 
-// Register extension CLI commands if available
+if (class_exists(WorkerCommand::class)) {
+    $cliKernel->registerCommandClass(WorkerCommand::class);
+}
+if (class_exists(ReindexCommand::class)) {
+    $cliKernel->registerCommandClass(ReindexCommand::class);
+}
 if (class_exists(AuthInitCommand::class)) {
     $cliKernel->registerCommandClass(AuthInitCommand::class);
 }

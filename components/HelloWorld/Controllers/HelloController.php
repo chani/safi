@@ -13,9 +13,9 @@ namespace Components\HelloWorld\Controllers;
 use Safi\Core\AbstractController;
 use Safi\Core\Attributes\Route;
 use Safi\Core\Http\Response;
-use Safi\Core\Models\Job;
 use Safi\Extensions\Auth\Models\LockedIp;
 use Safi\Extensions\Auth\Models\LoginAttempt;
+use Safi\Extensions\Queue\Models\Job;
 
 final class HelloController extends AbstractController
 {
