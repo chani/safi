@@ -28,6 +28,8 @@ use Safi\Extensions\RouterWajha\WajhaServiceProvider;
 use Safi\Extensions\Search\SearchServiceProvider;
 use Safi\Extensions\Session\SessionServiceProvider;
 use Safi\Extensions\ViewTwig\TwigServiceProvider;
+use Safi\Extensions\I18n\I18nServiceProvider;
+use Safi\Extensions\Session\SessionMiddleware;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -45,6 +47,8 @@ $appConfig = is_array($config['app'] ?? null) ? $config['app'] : [];
 $dbConfig = is_array($config['db'] ?? null) ? $config['db'] : [];
 /** @var array<string, mixed> $viewConfig */
 $viewConfig = is_array($config['views'] ?? null) ? $config['views'] : [];
+/** @var string $langDir */
+$langDir = is_string($config['lang_dir'] ?? null) ? $config['lang_dir'] : __DIR__ . '/data/lang';
 
 $debug = isset($appConfig['debug']) && $appConfig['debug'] === true;
 $dsn = is_string($dbConfig['dsn'] ?? null) ? $dbConfig['dsn'] : 'sqlite:' . __DIR__ . '/data/db/safi.db';
@@ -68,6 +72,7 @@ $componentManager->bootProviders([
     new AuthServiceProvider(),
     new QueueServiceProvider(),
     new SearchServiceProvider(),
+    new I18nServiceProvider($langDir),
     new TwigServiceProvider($templateDir, $cacheDir, $debug),
 ]);
 
@@ -122,7 +127,8 @@ $assembler->set(Kernel::class, static fn(ContainerInterface $_c): Kernel => new 
     $router,
     $logger,
     [
-        CorrelationIdMiddleware::class,
+	    CorrelationIdMiddleware::class,
+	    SessionMiddleware::class,
         AuthMiddleware::class,
     ],
 ));
