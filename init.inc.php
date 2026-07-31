@@ -16,6 +16,7 @@ use Safi\Core\ComponentManager;
 use Safi\Core\Contracts\RouterInterface;
 use Safi\Core\Contracts\ViewEngineInterface;
 use Safi\Core\Http\CorrelationIdMiddleware;
+use Safi\Core\Http\MiddlewareInterface;
 use Safi\Core\Kernel;
 use Safi\Core\Logger;
 use Safi\Core\Services\SecurityService;
@@ -23,13 +24,13 @@ use Safi\Extensions\Auth\AuthMiddleware;
 use Safi\Extensions\Auth\AuthServiceProvider;
 use Safi\Extensions\Cache\CacheServiceProvider;
 use Safi\Extensions\DbRedBean\RedBeanServiceProvider;
+use Safi\Extensions\I18n\I18nServiceProvider;
 use Safi\Extensions\Queue\QueueServiceProvider;
 use Safi\Extensions\RouterWajha\WajhaServiceProvider;
 use Safi\Extensions\Search\SearchServiceProvider;
+use Safi\Extensions\Session\SessionMiddleware;
 use Safi\Extensions\Session\SessionServiceProvider;
 use Safi\Extensions\ViewTwig\TwigServiceProvider;
-use Safi\Extensions\I18n\I18nServiceProvider;
-use Safi\Extensions\Session\SessionMiddleware;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -122,16 +123,21 @@ $viewEngine->addGlobal('csrf_token', fn(): string => $security->getCsrfToken());
 $viewEngine->addGlobal('session', fn(): array => $_SESSION ?? []);
 $viewEngine->addGlobal('app_version', Kernel::VERSION);
 
-$assembler->set(Kernel::class, static fn(ContainerInterface $_c): Kernel => new Kernel(
-    $assembler,
-    $router,
-    $logger,
-    [
-	    CorrelationIdMiddleware::class,
-	    SessionMiddleware::class,
-        AuthMiddleware::class,
-    ],
-));
+$assembler->set(Kernel::class, static function (ContainerInterface $c) use ($router, $logger, $viewEngine): Kernel {
+    /** @var MiddlewareInterface $correlation */
+    $correlation = $c->get(CorrelationIdMiddleware::class);
+    /** @var MiddlewareInterface $session */
+    $session = $c->get(SessionMiddleware::class);
+    /** @var MiddlewareInterface $auth */
+    $auth = $c->get(AuthMiddleware::class);
+
+    return new Kernel(
+        $router,
+        $logger,
+        $viewEngine,
+        [$correlation, $session, $auth],
+    );
+});
 
 return [
     'assembler' => $assembler,

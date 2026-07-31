@@ -1,0 +1,29 @@
+{% extends "_page.twig" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<article>
+  <header>
+    <h3><i class="fa-solid fa-code"></i> {{ framework }} - Developer Guide</h3>
+    <p><small>Welcome to Safi! This is a simple showcase component demonstrating framework features.</small></p>
+  </header>
+
+  <div class="grid">
+    <div>
+      <h5>Core Features</h5>
+      <ul>
+        {% for feature in features %}
+          <li><strong>{{ feature }}</strong></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div>
+      <article style="background: rgba(102, 252, 241, 0.05); border-color: rgba(102, 252, 241, 0.3);">
+        <h6>Runtime Context</h6>
+        <p>PHP Version: <code>{{ php_version }}</code><br>Safi Core: <code>0.1.14</code></p>
+      </article>
+    </div>
+  </div>
+</article>
+{% endblock %}
