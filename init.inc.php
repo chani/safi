@@ -65,26 +65,17 @@ $assembler->set(LoggerInterface::class, $logger);
 
 $componentManager = new ComponentManager($assembler, $logger);
 
-$providers = [
+$componentManager->bootProviders([
+    new CacheServiceProvider(),
     new SessionServiceProvider(),
     new RedBeanServiceProvider($dsn, $dbMode),
     new WajhaServiceProvider(),
     new AuthServiceProvider(),
+    new QueueServiceProvider(),
+    new SearchServiceProvider(),
     new I18nServiceProvider($langDir),
     new TwigServiceProvider($templateDir, $cacheDir, $debug),
-];
-
-if (class_exists(CacheServiceProvider::class)) {
-    $providers[] = new CacheServiceProvider();
-}
-if (class_exists(QueueServiceProvider::class)) {
-    $providers[] = new QueueServiceProvider();
-}
-if (class_exists(SearchServiceProvider::class)) {
-    $providers[] = new SearchServiceProvider();
-}
-
-$componentManager->bootProviders($providers);
+]);
 
 /** @var SecurityService $security */
 $security = $assembler->get(SecurityService::class);
@@ -114,7 +105,8 @@ if (class_exists(\Composer\InstalledVersions::class)) {
 
         $packageName = basename($package);
         $cleanName = preg_replace('/^safi-/', '', $packageName) ?? $packageName;
-        $namespace = ucfirst($cleanName);
+        // Convert hyphenated package names to PascalCase (e.g. admin-panel -> AdminPanel)
+        $namespace = str_replace(' ', '', ucwords(str_replace('-', ' ', $cleanName)));
 
         if (is_dir($installPath . '/templates')) {
             $viewEngine->registerNamespace($namespace, $installPath . '/templates');
