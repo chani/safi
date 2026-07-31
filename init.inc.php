@@ -65,17 +65,26 @@ $assembler->set(LoggerInterface::class, $logger);
 
 $componentManager = new ComponentManager($assembler, $logger);
 
-$componentManager->bootProviders([
-    new CacheServiceProvider(),
+$providers = [
     new SessionServiceProvider(),
     new RedBeanServiceProvider($dsn, $dbMode),
     new WajhaServiceProvider(),
     new AuthServiceProvider(),
-    new QueueServiceProvider(),
-    new SearchServiceProvider(),
     new I18nServiceProvider($langDir),
     new TwigServiceProvider($templateDir, $cacheDir, $debug),
-]);
+];
+
+if (class_exists(CacheServiceProvider::class)) {
+    $providers[] = new CacheServiceProvider();
+}
+if (class_exists(QueueServiceProvider::class)) {
+    $providers[] = new QueueServiceProvider();
+}
+if (class_exists(SearchServiceProvider::class)) {
+    $providers[] = new SearchServiceProvider();
+}
+
+$componentManager->bootProviders($providers);
 
 /** @var SecurityService $security */
 $security = $assembler->get(SecurityService::class);
