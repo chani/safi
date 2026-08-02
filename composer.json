@@ -58,7 +58,6 @@
             "Safi\\Wajha\\": "../wajha-router/src/"
         }
     },
-    "version": "0.1.15",
     "repositories": [
         {
             "type": "path",
