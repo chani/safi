@@ -17,7 +17,7 @@ final class HomeController extends AbstractController
 {
     public function index(): Response
     {
-        return $this->render('home.twig', [
+        return $this->render('home', [
             'title' => 'Safi Microframework',
             'message' => 'System operational & Phase 3 integrated.',
             'version' => '0.1.0',

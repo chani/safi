@@ -1,14 +1,8 @@
-# µADR-012: PSR-7 / PSR-15 Compliance via Lightweight Bridge Adapters
------
-tags: http psr7 psr15 adapters
-status: accepted
+# µADR-012: PSR-7 / PSR-15 Compliance via Bridge Adapters
 
-## Context
-Direct implementation of PSR-7 interfaces introduces unnecessary class boilerplate.
+## Context & Decision
+Direct PSR-7 implementation in core execution paths adds object allocation overhead. Core HTTP classes stay native, while PSR compatibility is handled via outer adapters.
 
-## Decision
-- Native Request and Response classes remain lightweight and native.
-- Interoperability with third-party PSR packages is provided via bridge adapters.
-
-## Guardrail / Consequences
-Do not add PSR-7 interface boilerplate to primary execution path classes.
+## Rules
+- Do: Keep native framework Request/Response classes lightweight and native.
+- Don't: Force PSR-7/15 interface implementations into primary execution hot paths.

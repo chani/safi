@@ -19,7 +19,7 @@ final class HelloController extends AbstractController
     #[Route('/hello', method: 'GET', name: 'hello.index', public: true)]
     public function index(): Response
     {
-        return $this->render('@HelloWorld/example.twig', [
+        return $this->render('@HelloWorld/example', [
             'title' => 'Developer Showcase',
             'framework' => 'Safi Microframework',
             'php_version' => PHP_VERSION,

@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Safi Microframework
- * @author Jean Bruenn
- * @copyright 2026 All Rights Reserved
- * @see https://github.com/chani/safi
- */
-
 declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
@@ -22,10 +15,6 @@ use Safi\Core\Logger;
 use Safi\Core\Services\SecurityService;
 use Safi\Extensions\Auth\AuthMiddleware;
 use Safi\Extensions\Auth\AuthServiceProvider;
-// Optional / Future extensions (not installed in local workspace):
-// use Safi\Extensions\Cache\CacheServiceProvider;
-// use Safi\Extensions\Queue\QueueServiceProvider;
-// use Safi\Extensions\Search\SearchServiceProvider;
 use Safi\Extensions\DbRedBean\RedBeanServiceProvider;
 use Safi\Extensions\I18n\I18nServiceProvider;
 use Safi\Extensions\RouterWajha\WajhaServiceProvider;
@@ -35,21 +24,18 @@ use Safi\Extensions\ViewTwig\TwigServiceProvider;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-/** @var array<string, mixed> $config */
 $config = require __DIR__ . '/config/config.php';
+assert(is_array($config));
+
 if (file_exists(__DIR__ . '/config/config.local.php')) {
-    /** @var array<string, mixed> $localConfig */
     $localConfig = require __DIR__ . '/config/config.local.php';
+    assert(is_array($localConfig));
     $config = array_replace_recursive($config, $localConfig);
 }
 
-/** @var array<string, mixed> $appConfig */
 $appConfig = is_array($config['app'] ?? null) ? $config['app'] : [];
-/** @var array<string, mixed> $dbConfig */
 $dbConfig = is_array($config['db'] ?? null) ? $config['db'] : [];
-/** @var array<string, mixed> $viewConfig */
 $viewConfig = is_array($config['views'] ?? null) ? $config['views'] : [];
-/** @var string $langDir */
 $langDir = is_string($config['lang_dir'] ?? null) ? $config['lang_dir'] : __DIR__ . '/data/lang';
 
 $debug = isset($appConfig['debug']) && $appConfig['debug'] === true;
@@ -67,9 +53,6 @@ $assembler->set(LoggerInterface::class, $logger);
 $componentManager = new ComponentManager($assembler, $logger);
 
 $componentManager->bootProviders([
-    // new CacheServiceProvider(),
-    // new QueueServiceProvider(),
-    // new SearchServiceProvider(),
     new SessionServiceProvider(),
     new RedBeanServiceProvider($dsn, $dbMode),
     new WajhaServiceProvider(),
@@ -78,11 +61,26 @@ $componentManager->bootProviders([
     new TwigServiceProvider($templateDir, $cacheDir, $debug),
 ]);
 
-/** @var SecurityService $security */
-$security = $assembler->get(SecurityService::class);
+// ARCHITECTURE GUARD: SessionServiceInterface MUST be passed as a lazy closure.
+// SessionService depends on SecurityService for client IP resolution during boot. Direct container fetch here causes
+// a circular dependency deadlock during initialization. Keep the closure resolver lazy.
+$assembler->set(SecurityService::class, static function (ContainerInterface $c): SecurityService {
+    $logger = $c->get(LoggerInterface::class);
+    assert($logger instanceof LoggerInterface);
+    $sessionClass = 'Safi\\Extensions\\Session\\SessionServiceInterface';
 
-/** @var ViewEngineInterface $viewEngine */
+    return new SecurityService(
+        $logger,
+        [],
+        static fn() => $c->has($sessionClass) ? $c->get($sessionClass) : null
+    );
+});
+
+$security = $assembler->get(SecurityService::class);
+assert($security instanceof SecurityService);
+
 $viewEngine = $assembler->get(ViewEngineInterface::class);
+assert($viewEngine instanceof ViewEngineInterface);
 
 $componentManager->registerComponentViews($viewEngine, __DIR__ . '/components');
 
@@ -90,8 +88,9 @@ if (is_dir(__DIR__ . '/templates/auth')) {
     $viewEngine->registerNamespace('Auth', __DIR__ . '/templates/auth');
 }
 
-/** @var RouterInterface $router */
 $router = $assembler->get(RouterInterface::class);
+assert($router instanceof RouterInterface);
+
 $componentManager->registerAttributeRoutes($router, __DIR__ . '/components');
 
 if (class_exists(\Composer\InstalledVersions::class)) {
@@ -125,12 +124,14 @@ $viewEngine->addGlobal('session', fn(): array => $_SESSION ?? []);
 $viewEngine->addGlobal('app_version', Kernel::VERSION);
 
 $assembler->set(Kernel::class, static function (ContainerInterface $c) use ($router, $logger, $viewEngine): Kernel {
-    /** @var MiddlewareInterface $correlation */
     $correlation = $c->get(CorrelationIdMiddleware::class);
-    /** @var MiddlewareInterface $session */
+    assert($correlation instanceof MiddlewareInterface);
+
     $session = $c->get(SessionMiddleware::class);
-    /** @var MiddlewareInterface $auth */
+    assert($session instanceof MiddlewareInterface);
+
     $auth = $c->get(AuthMiddleware::class);
+    assert($auth instanceof MiddlewareInterface);
 
     return new Kernel(
         $router,
