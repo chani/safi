@@ -1,6 +1,7 @@
 /vendor/
 composer.lock
 
+.twig-cs-fixer.cache
 .php-cs-fixer.cache
 .phpstan.cache/
 .phpunit.result.cache
