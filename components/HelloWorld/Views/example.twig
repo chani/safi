@@ -1,4 +1,4 @@
-{% extends "_page.twig" %} {% block title %}{{ title }}{% endblock %} {% block
+{% extends '_page.twig' %} {% block title %}{{ title }}{% endblock %} {% block
 content %}
 <article>
   <header>
@@ -30,7 +30,7 @@ content %}
         <h6>Runtime Context</h6>
         <p>
           PHP Version: <code>{{ php_version }}</code><br />Safi Core:
-          <code>0.1.14</code>
+          <code>{{ app_version }}</code>
         </p>
       </article>
     </div>
