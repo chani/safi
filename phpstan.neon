@@ -1,8 +1,17 @@
 parameters:
     level: max
+    tmpDir: .phpstan.cache
     paths:
-        - init.inc.php
         - src
         - components
+        - init.inc.php
+    excludePaths:
+        analyseAndScan:
+            - '*/vendor/*'
+            - '*/data/*'
+            - '*/cache/*'
+            - '*/var/*'
+            - '*/storage/*'
+            - '*.cache'
     treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false

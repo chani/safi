@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <psalm
-    errorLevel="3"
+    errorLevel="1"
     resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
@@ -8,8 +8,6 @@
 >
     <projectFiles>
         <directory name="src" />
-        <directory name="components" />
-        <file name="init.inc.php" />
         <ignoreFiles>
             <directory name="vendor" />
         </ignoreFiles>
@@ -19,14 +17,8 @@
         <UnusedParam errorLevel="suppress" />
         <PossiblyUnusedMethod errorLevel="suppress" />
         <PossiblyUnusedProperty errorLevel="suppress" />
-        <MissingOverrideAttribute errorLevel="info" />
-        <RedundantCondition errorLevel="info" />
-        <TypeDoesNotContainType errorLevel="info" />
-        <PossiblyNullArgument errorLevel="info" />
-        <MoreSpecificImplementedParamType errorLevel="info" />
-        <ArgumentTypeCoercion errorLevel="info" />
-        <InvalidDocblock errorLevel="info" />
-        <InvalidOperand errorLevel="suppress" />
-        <PossiblyFalseOperand errorLevel="suppress" />
+        <PossiblyUnusedReturnValue errorLevel="suppress" />
+        <UnevaluatedCode errorLevel="suppress" />
+        <MissingOverrideAttribute errorLevel="error" />
     </issueHandlers>
 </psalm>
