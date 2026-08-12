@@ -32,7 +32,7 @@ final class BootstrapTest extends TestCase
         $view = $this->createMock(ViewEngineInterface::class);
         $view->expects($this->once())
             ->method('render')
-            ->with('@HelloWorld/example', $this->isType('array'))
+            ->with('@HelloWorld/example', $this->callback('is_array'))
             ->willReturn('<h1>Showcase</h1>');
 
         $request = new Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/hello']);
