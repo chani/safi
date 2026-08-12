@@ -21,7 +21,6 @@ use Safi\Extensions\AdminPanel\AdminPanelServiceProvider;
 use Safi\Extensions\Auth\AuthMiddleware;
 use Safi\Extensions\Auth\AuthServiceProvider;
 use Safi\Extensions\DbRedBean\RedBeanServiceProvider;
-use Safi\Extensions\I18n\I18nServiceProvider;
 use Safi\Extensions\RouterWajha\WajhaServiceProvider;
 use Safi\Extensions\Session\SessionMiddleware;
 use Safi\Extensions\Session\SessionServiceInterface;
@@ -42,7 +41,6 @@ if (file_exists(__DIR__ . '/config/config.local.php')) {
 $appConfig = is_array($config['app'] ?? null) ? $config['app'] : [];
 $dbConfig = is_array($config['db'] ?? null) ? $config['db'] : [];
 $viewConfig = is_array($config['views'] ?? null) ? $config['views'] : [];
-$langDir = is_string($config['lang_dir'] ?? null) ? $config['lang_dir'] : __DIR__ . '/data/lang';
 
 $debug = isset($appConfig['debug']) && $appConfig['debug'] === true;
 $dsn = is_string($dbConfig['dsn'] ?? null) ? $dbConfig['dsn'] : 'sqlite:' . __DIR__ . '/data/db/safi.db';
@@ -68,17 +66,9 @@ $providers = [
     new WajhaServiceProvider(),
     new AuthServiceProvider(),
     new TwigServiceProvider($templateDir, $cacheDir, $debug),
+    new AdminPanelServiceProvider(),
 ];
 
-if (class_exists(AdminPanelServiceProvider::class)) {
-    $providers[] = new AdminPanelServiceProvider();
-}
-
-if (class_exists(I18nServiceProvider::class)) {
-    $providers[] = new I18nServiceProvider($langDir);
-}
-
-/** @var array<int, ServiceProviderInterface> $providers */
 $componentManager->bootProviders($providers);
 
 $assembler->set(SecurityServiceInterface::class, static function (ContainerInterface $c): SecurityService {
@@ -102,23 +92,6 @@ assert($viewEngine instanceof ViewEngineInterface);
 
 $componentManager->registerComponentViews($viewEngine, __DIR__ . '/components');
 
-// Dynamically register application template subdirectories as view namespaces (e.g. templates/auth -> @Auth)
-if (is_dir($templateDir)) {
-    $subDirs = scandir($templateDir);
-    if (is_array($subDirs)) {
-        foreach ($subDirs as $subDir) {
-            if ($subDir === '.' || $subDir === '..') {
-                continue;
-            }
-            $fullPath = $templateDir . '/' . $subDir;
-            if (is_dir($fullPath)) {
-                $namespace = ucfirst($subDir);
-                $viewEngine->registerNamespace($namespace, $fullPath);
-            }
-        }
-    }
-}
-
 $router = $assembler->get(RouterInterface::class);
 assert($router instanceof RouterInterface);
 
@@ -129,6 +102,21 @@ $manifestFile = __DIR__ . '/data/cache/package_manifest.php';
 /** @var array{templates: array<string, string>, components: list<string>, routes: list<string>} $manifest */
 if ($debug || !file_exists($manifestFile)) {
     $manifest = ['templates' => [], 'components' => [], 'routes' => []];
+
+    if (is_dir($templateDir)) {
+        $subDirs = scandir($templateDir);
+        if (is_array($subDirs)) {
+            foreach ($subDirs as $subDir) {
+                if ($subDir === '.' || $subDir === '..') {
+                    continue;
+                }
+                $fullPath = $templateDir . '/' . $subDir;
+                if (is_dir($fullPath)) {
+                    $manifest['templates'][ucfirst($subDir)] = $fullPath;
+                }
+            }
+        }
+    }
 
     if (class_exists(\Composer\InstalledVersions::class)) {
         foreach (\Composer\InstalledVersions::getInstalledPackages() as $package) {
