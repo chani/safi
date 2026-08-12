@@ -17,7 +17,7 @@
   </head>
   <body>
     <div class="safi-app-container">
-      {% if session.auth_user_id is defined %}
+      {% if session.auth_user_id is not null %}
       <!-- Left Sidebar Navigation -->
       <aside class="safi-sidebar">
         <div class="safi-sidebar-brand">
@@ -64,7 +64,7 @@
             >
           </div>
 
-          {% if session.auth_user_id is defined %}
+          {% if session.auth_user_id is not null %}
           <div class="safi-topbar-search">
             <input
               type="search"

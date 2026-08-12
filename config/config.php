@@ -19,6 +19,9 @@ return [
         'dsn' => 'sqlite:' . __DIR__ . '/../data/db/safi.db',
         'mode' => 'local',
     ],
+    'security' => [
+        'trusted_proxies' => [],
+    ],
     'views' => [
         'template_dir' => __DIR__ . '/../templates',
         'cache_dir' => __DIR__ . '/../data/cache/views',
