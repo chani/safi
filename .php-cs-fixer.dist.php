@@ -18,6 +18,12 @@ if (is_dir(__DIR__ . '/components')) {
     $finder->in(__DIR__ . '/components');
 }
 
+foreach (glob(__DIR__ . '/*.php') as $rootPhpFile) {
+    if (is_file($rootPhpFile)) {
+        $finder->append([$rootPhpFile]);
+    }
+}
+
 return (new Config())
     ->setRiskyAllowed(true)
     ->setRules([
