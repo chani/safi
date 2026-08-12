@@ -1,11 +1,5 @@
 <?php
 
-/**
- * Safi Microframework Skeleton
- * @author Jean Bruenn
- * @copyright 2026 All Rights Reserved
- */
-
 declare(strict_types=1);
 
 namespace Components\HelloWorld\Controllers;
@@ -24,11 +18,11 @@ final class HelloController extends AbstractController
             'framework' => 'Safi Microframework',
             'php_version' => PHP_VERSION,
             'features' => [
-                'Pure Reflection DI (No Service Locators)',
-                'Attribute-Based Route Compilation via Wajha',
-                'Zero-Bloat Persistence Interface',
-                'Deferred View Globals & Twig Engine',
-                'Secure-by-Default MVC Architecture',
+                'Dependency Injection Container',
+                'Attribute-Based Route Compilation',
+                'MVC Boundary Isolation',
+                'Deferred View Globals',
+                'Inverted Route Protection',
             ],
         ]);
     }
