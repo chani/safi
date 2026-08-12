@@ -1,6 +1,6 @@
 # How-To: Using Deferred View Globals
 
-Register lazy-evaluated global variables in `ViewEngineInterface` (µADR-027) to avoid executing unnecessary operations when templates do not reference the variable.
+Register lazy-evaluated global variables in `ViewEngineInterface` (µADR-006) to avoid executing unnecessary operations when templates do not reference the variable.
 
 ---
 
