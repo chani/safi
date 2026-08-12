@@ -36,8 +36,8 @@ final class BootstrapTest extends TestCase
             ->willReturn('<h1>Showcase</h1>');
 
         $request = new Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/hello']);
-        $security = $this->createMock(SecurityServiceInterface::class);
-        $db = $this->createMock(DatabaseDriverInterface::class);
+        $security = $this->createStub(SecurityServiceInterface::class);
+        $db = $this->createStub(DatabaseDriverInterface::class);
 
         $controller = new HelloController($view, $request, $security, $db);
         $response = $controller->index();
