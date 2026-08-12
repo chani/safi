@@ -6,19 +6,25 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Safi\Core\Assembler;
 use Safi\Core\ComponentManager;
+use Safi\Core\Contracts\EventDispatcherInterface;
 use Safi\Core\Contracts\RouterInterface;
+use Safi\Core\Contracts\SecurityServiceInterface;
+use Safi\Core\Contracts\ServiceProviderInterface;
 use Safi\Core\Contracts\ViewEngineInterface;
+use Safi\Core\Event\EventDispatcher;
 use Safi\Core\Http\CorrelationIdMiddleware;
 use Safi\Core\Http\MiddlewareInterface;
 use Safi\Core\Kernel;
 use Safi\Core\Logger;
 use Safi\Core\Services\SecurityService;
+use Safi\Extensions\AdminPanel\AdminPanelServiceProvider;
 use Safi\Extensions\Auth\AuthMiddleware;
 use Safi\Extensions\Auth\AuthServiceProvider;
 use Safi\Extensions\DbRedBean\RedBeanServiceProvider;
 use Safi\Extensions\I18n\I18nServiceProvider;
 use Safi\Extensions\RouterWajha\WajhaServiceProvider;
 use Safi\Extensions\Session\SessionMiddleware;
+use Safi\Extensions\Session\SessionServiceInterface;
 use Safi\Extensions\Session\SessionServiceProvider;
 use Safi\Extensions\ViewTwig\TwigServiceProvider;
 
@@ -47,27 +53,38 @@ $cacheDir = is_string($viewConfig['cache_dir'] ?? null) ? $viewConfig['cache_dir
 $logger = new Logger($debug);
 $assembler = new Assembler($logger);
 
+$eventDispatcher = new EventDispatcher();
 $assembler->set(ContainerInterface::class, $assembler);
 $assembler->set(LoggerInterface::class, $logger);
+$assembler->set(EventDispatcherInterface::class, $eventDispatcher);
+$assembler->set(EventDispatcher::class, $eventDispatcher);
 
 $componentManager = new ComponentManager($assembler, $logger);
 
-$componentManager->bootProviders([
+/** @var list<ServiceProviderInterface> $providers */
+$providers = [
     new SessionServiceProvider(),
     new RedBeanServiceProvider($dsn, $dbMode),
     new WajhaServiceProvider(),
     new AuthServiceProvider(),
-    new I18nServiceProvider($langDir),
     new TwigServiceProvider($templateDir, $cacheDir, $debug),
-]);
+];
 
-// ARCHITECTURE GUARD: SessionServiceInterface MUST be passed as a lazy closure.
-// SessionService depends on SecurityService for client IP resolution during boot. Direct container fetch here causes
-// a circular dependency deadlock during initialization. Keep the closure resolver lazy.
-$assembler->set(SecurityService::class, static function (ContainerInterface $c): SecurityService {
+if (class_exists(AdminPanelServiceProvider::class)) {
+    $providers[] = new AdminPanelServiceProvider();
+}
+
+if (class_exists(I18nServiceProvider::class)) {
+    $providers[] = new I18nServiceProvider($langDir);
+}
+
+/** @var array<int, ServiceProviderInterface> $providers */
+$componentManager->bootProviders($providers);
+
+$assembler->set(SecurityServiceInterface::class, static function (ContainerInterface $c): SecurityService {
     $logger = $c->get(LoggerInterface::class);
     assert($logger instanceof LoggerInterface);
-    $sessionClass = 'Safi\\Extensions\\Session\\SessionServiceInterface';
+    $sessionClass = SessionServiceInterface::class;
 
     return new SecurityService(
         $logger,
@@ -76,7 +93,8 @@ $assembler->set(SecurityService::class, static function (ContainerInterface $c):
     );
 });
 
-$security = $assembler->get(SecurityService::class);
+$assembler->set(SecurityService::class, fn(ContainerInterface $c) => $c->get(SecurityServiceInterface::class));
+$security = $assembler->get(SecurityServiceInterface::class);
 assert($security instanceof SecurityService);
 
 $viewEngine = $assembler->get(ViewEngineInterface::class);
@@ -84,8 +102,21 @@ assert($viewEngine instanceof ViewEngineInterface);
 
 $componentManager->registerComponentViews($viewEngine, __DIR__ . '/components');
 
-if (is_dir(__DIR__ . '/templates/auth')) {
-    $viewEngine->registerNamespace('Auth', __DIR__ . '/templates/auth');
+// Dynamically register application template subdirectories as view namespaces (e.g. templates/auth -> @Auth)
+if (is_dir($templateDir)) {
+    $subDirs = scandir($templateDir);
+    if (is_array($subDirs)) {
+        foreach ($subDirs as $subDir) {
+            if ($subDir === '.' || $subDir === '..') {
+                continue;
+            }
+            $fullPath = $templateDir . '/' . $subDir;
+            if (is_dir($fullPath)) {
+                $namespace = ucfirst($subDir);
+                $viewEngine->registerNamespace($namespace, $fullPath);
+            }
+        }
+    }
 }
 
 $router = $assembler->get(RouterInterface::class);
@@ -93,35 +124,77 @@ assert($router instanceof RouterInterface);
 
 $componentManager->registerAttributeRoutes($router, __DIR__ . '/components');
 
-if (class_exists(\Composer\InstalledVersions::class)) {
-    foreach (\Composer\InstalledVersions::getInstalledPackages() as $package) {
-        if (!str_starts_with($package, 'chani/')) {
-            continue;
-        }
-        $installPath = \Composer\InstalledVersions::getInstallPath($package);
-        if (!is_string($installPath)) {
-            continue;
-        }
+$manifestFile = __DIR__ . '/data/cache/package_manifest.php';
 
-        $packageName = basename($package);
-        $cleanName = preg_replace('/^safi-/', '', $packageName) ?? $packageName;
-        $namespace = str_replace(' ', '', ucwords(str_replace('-', ' ', $cleanName)));
+/** @var array{templates: array<string, string>, components: list<string>, routes: list<string>} $manifest */
+if ($debug || !file_exists($manifestFile)) {
+    $manifest = ['templates' => [], 'components' => [], 'routes' => []];
 
-        if (is_dir($installPath . '/templates')) {
-            $viewEngine->registerNamespace($namespace, $installPath . '/templates');
-        }
-        if (is_dir($installPath . '/components')) {
-            $componentManager->registerComponentViews($viewEngine, $installPath . '/components');
-        }
-        if (is_dir($installPath . '/src')) {
-            $componentManager->registerAttributeRoutes($router, $installPath . '/src');
+    if (class_exists(\Composer\InstalledVersions::class)) {
+        foreach (\Composer\InstalledVersions::getInstalledPackages() as $package) {
+            if (!str_starts_with($package, 'chani/')) {
+                continue;
+            }
+            $installPath = \Composer\InstalledVersions::getInstallPath($package);
+            if (!is_string($installPath)) {
+                continue;
+            }
+
+            $packageName = basename($package);
+            $cleanName = preg_replace('/^safi-/', '', $packageName) ?? $packageName;
+            $namespace = str_replace(' ', '', ucwords(str_replace('-', ' ', $cleanName)));
+
+            if (is_dir($installPath . '/templates')) {
+                $manifest['templates'][$namespace] = $installPath . '/templates';
+            }
+            if (is_dir($installPath . '/components')) {
+                $manifest['components'][] = $installPath . '/components';
+            }
+            if (is_dir($installPath . '/src')) {
+                $manifest['routes'][] = $installPath . '/src';
+            }
         }
     }
+
+    if (!$debug) {
+        $manifestDir = dirname($manifestFile);
+        if (!is_dir($manifestDir)) {
+            mkdir($manifestDir, 0755, true);
+        }
+        $tmpFile = $manifestFile . '.' . bin2hex(random_bytes(4)) . '.tmp';
+        file_put_contents($tmpFile, "<?php\n\ndeclare(strict_types=1);\n\nreturn " . var_export($manifest, true) . ";\n", LOCK_EX);
+        rename($tmpFile, $manifestFile);
+    }
+} else {
+    /** @var array{templates: array<string, string>, components: list<string>, routes: list<string>} $loadedManifest */
+    $loadedManifest = require $manifestFile;
+    $manifest = $loadedManifest;
 }
 
-$viewEngine->addGlobal('csrf_token', fn(): string => $security->getCsrfToken());
-$viewEngine->addGlobal('session', fn(): array => $_SESSION ?? []);
-$viewEngine->addGlobal('app_version', Kernel::VERSION);
+foreach ($manifest['templates'] as $namespace => $path) {
+    $viewEngine->registerNamespace($namespace, $path);
+}
+foreach ($manifest['components'] as $path) {
+    $componentManager->registerComponentViews($viewEngine, $path);
+}
+foreach ($manifest['routes'] as $path) {
+    $componentManager->registerAttributeRoutes($router, $path);
+}
+
+$viewEngine->addGlobal('csrf_token', static fn(): string => $security->getCsrfToken());
+$viewEngine->addGlobal('session', static function () use ($assembler): array {
+    if ($assembler->has(SessionServiceInterface::class)) {
+        $session = $assembler->get(SessionServiceInterface::class);
+        if ($session instanceof SessionServiceInterface) {
+            return [
+                'auth_user_id' => $session->get('auth_user_id'),
+                'auth_username' => $session->get('auth_username'),
+            ];
+        }
+    }
+    return [];
+});
+$viewEngine->addGlobal('app_version', static fn(): string => Kernel::VERSION);
 
 $assembler->set(Kernel::class, static function (ContainerInterface $c) use ($router, $logger, $viewEngine): Kernel {
     $correlation = $c->get(CorrelationIdMiddleware::class);

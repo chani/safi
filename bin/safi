@@ -1,21 +1,13 @@
 #!/usr/bin/env php
 <?php
 
-/**
- * Safi CLI Executable Engine
- * @author Jean Bruenn
- * @copyright 2026 All Rights Reserved
- */
-
 declare(strict_types=1);
 
+use Safi\Core\Assembler;
+use Safi\Core\Cli\CommandInterface;
 use Safi\Core\Cli\CommandKernel;
 use Safi\Core\Cli\Commands\DiDumpCommand;
-use Safi\Extensions\Auth\Cli\Commands\AuthInitCommand;
-use Safi\Extensions\Queue\Cli\Commands\WorkerCommand;
-use Safi\Extensions\Search\Cli\Commands\ReindexCommand;
 
-/** @var array{assembler: \Psr\Container\ContainerInterface} $boot */
 $boot = require __DIR__ . '/../init.inc.php';
 
 $container = $boot['assembler'];
@@ -23,14 +15,13 @@ $cliKernel = new CommandKernel($container);
 
 $cliKernel->registerCommandClass(DiDumpCommand::class);
 
-if (class_exists(WorkerCommand::class)) {
-    $cliKernel->registerCommandClass(WorkerCommand::class);
-}
-if (class_exists(ReindexCommand::class)) {
-    $cliKernel->registerCommandClass(ReindexCommand::class);
-}
-if (class_exists(AuthInitCommand::class)) {
-    $cliKernel->registerCommandClass(AuthInitCommand::class);
+if ($container instanceof Assembler) {
+    foreach ($container->getServiceIds() as $serviceId) {
+        if (class_exists($serviceId) && is_subclass_of($serviceId, CommandInterface::class)) {
+            $cliKernel->registerCommandClass($serviceId);
+        }
+    }
 }
 
-exit($cliKernel->run($_SERVER['argv'] ?? []));
+$cliArgs = $argv ?? $GLOBALS['argv'] ?? [];
+exit($cliKernel->run(is_array($cliArgs) ? $cliArgs : []));

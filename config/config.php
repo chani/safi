@@ -13,7 +13,7 @@ return [
     'app' => [
         'name' => 'Safi Application',
         'env' => 'development',
-        'debug' => true,
+        'debug' => false,
     ],
     'db' => [
         'dsn' => 'sqlite:' . __DIR__ . '/../data/db/safi.db',
